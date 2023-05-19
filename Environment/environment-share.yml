@@ -1,0 +1,15 @@
+name: cathEnv
+channels:
+  - defaults
+dependencies:
+  - numpy
+  - scipy
+  - python=3.6.12
+  - opencv
+  - pylint
+  - jupyter
+  - autopep8
+  - ipdb
+  - seaborn
+  - brokenaxes
+prefix: /Users/arjungupta/opt/anaconda3/envs/cathEnv
