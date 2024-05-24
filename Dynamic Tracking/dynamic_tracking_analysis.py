@@ -3,7 +3,7 @@
 
 # Imports
 
-# In[14]:
+# In[1]:
 
 
 from catheter_utils import geometry
@@ -25,27 +25,29 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # Constants and Paths
 
-# In[15]:
+# In[2]:
 
 
 # Main data paths for each catheter (manually input)
-main_paths = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/']
+parent_path = '../data/processed/dynamic/'
+catheter_paths = ['catheter231/', 'catheter299/', 'catheter306/']
+main_paths = [parent_path + cath for cath in catheter_paths]
 
 # Ground truth paths (to manually input)
-GT_filename_home = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/gt/home/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/gt/home/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/gt/home/GroundTruthCoords.csv']
-GT_filename_pos15 = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/gt/p15/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/gt/p15/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/gt/p15/GroundTruthCoords.csv']
-GT_filename_neg15 = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/gt/n15/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/gt/n15/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/gt/n15/GroundTruthCoords.csv']
-GT_filename_pos5 = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/gt/p5/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/gt/p5/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/gt/p5/GroundTruthCoords.csv']
-GT_filename_neg5 = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter231/gt/n5/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter299/gt/n5/GroundTruthCoords.csv', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Data/catheter306/gt/n5/GroundTruthCoords.csv']
+GT_filename_home = [d + 'gt/home/GroundTruthCoords.csv' for d in main_paths] 
+GT_filename_pos15 = [d + 'gt/p15/GroundTruthCoords.csv' for d in main_paths]
+GT_filename_neg15 = [d + 'gt/n15/GroundTruthCoords.csv' for d in main_paths]
+GT_filename_pos5 = [d + 'gt/p5/GroundTruthCoords.csv' for d in main_paths]
+GT_filename_neg5 = [d + 'gt/n5/GroundTruthCoords.csv' for d in main_paths]
 
+results_path = '../reports/figures/dynamic/'
 # Where you would like to save the comparison plots (manually input)
-comparison_plot_paths = ['/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Figures/comparisonPlots/catheter231/', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Figures/comparisonPlots/catheter299/', '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Figures/comparisonPlots/catheter306/']
+comparison_plot_paths = [results_path + 'comparisonPlots/' + cath for cath in catheter_paths] #['../reports/figures/dynamic/comparisonPlots/catheter231/', '../reports/figures/dynamic/comparisonPlots/catheter299/', '../reports/figures/dynamic/comparisonPlots/catheter306/']
 
 # Where you would like to save the box plots (manually input)
-box_plot_path = '/home/lbiswas/data/activeTracking-arjunData/Dynamic Tracking/Figures/boxPlots/'
+box_plot_path = results_path + 'boxPlots/'
 
 sequences = ['HM', '3P']
-sequences = ['Hadamard Multiplexed', 'Conventional']
 cap = 'centroid_around_peak'
 jpng = 'jpng'
 
@@ -102,7 +104,7 @@ GT_neg5_coords_dfs = [get_gt_coords(GT_filename_neg5[0]), get_gt_coords(GT_filen
 
 # Constant Numerical Values
 
-# In[16]:
+# In[3]:
 
 
 num_caths = 3
@@ -194,7 +196,7 @@ unit_vectors_from_dist_resp[0][0] = -1 * unit_vectors_from_dist_resp[0][0] # Nee
 
 # Data Processing Functions
 
-# In[17]:
+# In[4]:
 
 
 def cathcoords_to_DataFrame(path, sequence, algorithm, coil, recording):
@@ -396,7 +398,7 @@ def get_tip_coords(prox_df, dist_df, geometry_index):
 
 # Plotting Functions
 
-# In[18]:
+# In[5]:
 
 
 def plot_tracked_vs_expected(tracked, expected, start_idx, plot_path, save=True):
@@ -696,7 +698,7 @@ def plot_error_box_plot(plot_df, plot_path, save=True):
 
 # Dataframes for Coil Tracking Data
 
-# In[19]:
+# In[6]:
 
 
 # Convert coil cathcoords to dataframes
@@ -768,7 +770,7 @@ SRI_2_cap_7_306_card = cathcoords_to_DataFrame(main_paths[2], sequences[1], cap,
 
 # Dataframes for Tip Tracking Data
 
-# In[20]:
+# In[7]:
 
 
 # Get tip coords from tracked data
@@ -816,7 +818,7 @@ SRI_2_cap_tip_306_card = get_tip_coords(SRI_2_cap_7_306_card, SRI_2_cap_6_306_ca
 
 # Dataframes for Ground Truth (Expected) Coil Data
 
-# In[21]:
+# In[8]:
 
 
 # Get expected coil coords for each sequence
@@ -888,7 +890,7 @@ SRI_2_cap_7_expected_306_card = get_expected_coords_card(SRI_2_cap_7_306_card, s
 
 # Dataframes for GT (Expected) Tip Data
 
-# In[22]:
+# In[9]:
 
 
 # Get GT expected tip coords for each sequence
@@ -936,7 +938,7 @@ SRI_2_cap_tip_expected_306_card = get_tip_coords(SRI_2_cap_7_expected_306_card, 
 
 # Calculate Error Between Tracked (Measured) and Ground Truth (Expected) Data
 
-# In[23]:
+# In[10]:
 
 
 # Calculate error for each sequence
@@ -1032,7 +1034,7 @@ SRI_2_cap_plot_df_306_card             = calculate_error(SRI_2_cap_tracked_dataf
 
 # Generate Tracked vs. Expected Plots
 
-# In[24]:
+# In[11]:
 
 
 # # Get comparison plots and save them to directory
@@ -1128,7 +1130,7 @@ SRI_2_cap_plot_df_306_card             = calculate_error(SRI_2_cap_tracked_dataf
 
 # Generate Error Lineplots
 
-# In[25]:
+# In[12]:
 
 
 # # Plot error lineplots and save them to directory
@@ -1224,7 +1226,7 @@ plot_motion_error(SRI_2_jpng_tip_299_card, SRI_2_jpng_tip_expected_299_card, sta
 
 # Generate Error Boxplots
 
-# In[26]:
+# In[13]:
 
 
 # Merge data for error boxplots, plot them, and save them to directory
