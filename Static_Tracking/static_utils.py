@@ -9,7 +9,7 @@ from catheter_utils import metrics
 
 
 ##### Heatmap Function ######
-def nonuniform_imshow(x, y, z, aspect = 1, cmap = plt.cm.rainbow):
+def nonuniform_imshow(x, y, z, stddev=[], numeric=False, aspect = 1, cmap = plt.cm.rainbow):
     # Create regular grid
     xi, yi = np.linspace(x.min() - 16.6, x.max() + 16.6, 4), np.linspace(y.min() - 16.6, y.max() + 16.6, 4)
     xi, yi = np.meshgrid(xi, yi)
@@ -21,12 +21,19 @@ def nonuniform_imshow(x, y, z, aspect = 1, cmap = plt.cm.rainbow):
     fig, ax = plt.subplots(figsize=(12, 8))
 
     hm = ax.imshow(zi, interpolation = 'nearest', cmap = cmap, norm = norm, extent = [x.min() - 16.6, x.max() + 16.6, y.max() + 16.6, y.min() - 16.6])
-    ax.scatter(x, y, c = 'k')
+
+    if numeric and (len(stddev) == len(z)):
+            for i in range(0,len(z)):
+                txt = f"{z[i]:.1f}\u00B1{stddev[i]:.1f}"
+                ax.text(x[i]-5, y[i], txt)
+    else:
+        ax.scatter(x, y, c = 'k')
+
     ax.set_aspect(aspect)
     return hm
 
 def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_index=1):
-    # Get data for each catheter
+    # Get ground truth and error data for each catheter
     path_dct = {}
 
     for path in main_path:
@@ -74,11 +81,12 @@ def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_inde
                 proximal_file = cathcoord_files[0][proximal_index]
 
                 bias = metrics.Bias(distal_file, proximal_file, tip_gt, geo)
+                variance = cathcoords.get_tip_variance(distal_file, proximal_file, geo)
 
-                coords.append([tip_gt[0][0], tip_gt[0][2], bias])
+                coords.append([tip_gt[0][0], tip_gt[0][2], bias, variance])
 
             else:
-                coords.append([tip_gt[0][0], tip_gt[0][2], 0])
+                coords.append([tip_gt[0][0], tip_gt[0][2], 0, 0])
 
         coords = np.array(coords)
 
