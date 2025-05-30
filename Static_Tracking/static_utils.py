@@ -30,6 +30,8 @@ def nonuniform_imshow(x, y, z, stddev=[], numeric=False, aspect = 1, cmap = plt.
         ax.scatter(x, y, c = 'k')
 
     ax.set_aspect(aspect)
+    ax.grid(False)
+
     return hm
 
 def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_index=1):
