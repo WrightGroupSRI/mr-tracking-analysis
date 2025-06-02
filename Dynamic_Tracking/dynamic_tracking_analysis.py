@@ -774,10 +774,10 @@ print("Cardiac Motion Profile: JPNG Tip Error")
 plot_error_box_plot(plot_df_card, box_plot_path, sequences)
 
 
-# In[15]:
+# In[21]:
 
 
-print('Respiratory Motion results')
+print('Respiratory Motion: JPNG Tip Error')
 resp_hm_mean = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].mean()
 resp_hm_std = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].std()
 
@@ -785,10 +785,10 @@ resp_hm_std = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].std()
 resp_3p_mean = plot_df_resp[plot_df_resp['Sequence']=='3P']['Total Error'].mean()
 resp_3p_std = plot_df_resp[plot_df_resp['Sequence']=='3P']['Total Error'].std()
 
-print(f'\tHM: Mean Error = {resp_hm_mean} mm, SD = {resp_hm_std} mm')
-print(f'\t3P: Mean Error = {resp_3p_mean} mm, SD = {resp_3p_std} mm')
+print(f'\tHM: {resp_hm_mean:.2f}\u00B1{resp_hm_std:.2f} mm')
+print(f'\t3P: {resp_3p_mean:.2f}\u00B1{resp_3p_std:.2f} mm')
 
-print('Cardiac Motion results')
+print('\nCardiac Motion: JPNG Tip Error')
 card_hm_mean = plot_df_card[plot_df_card['Sequence']=='HM']['Total Error'].mean()
 card_hm_std = plot_df_card[plot_df_card['Sequence']=='HM']['Total Error'].std()
 
@@ -796,8 +796,8 @@ card_hm_std = plot_df_card[plot_df_card['Sequence']=='HM']['Total Error'].std()
 card_3p_mean = plot_df_card[plot_df_card['Sequence']=='3P']['Total Error'].mean()
 card_3p_std = plot_df_card[plot_df_card['Sequence']=='3P']['Total Error'].std()
 
-print(f'\tHM: Mean Error = {card_hm_mean} mm, SD = {card_hm_std} mm')
-print(f'\t3P: Mean Error = {card_3p_mean} mm, SD = {card_3p_std} mm')
+print(f'\tHM: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
+print(f'\t3P: {card_3p_mean:.2f}\u00B1{card_3p_std:.2f} mm')
 
 
 # # HDF5 Exports
