@@ -28,8 +28,8 @@ get_ipython().run_line_magic('pwd', '')
 
 
 # Main data paths for each catheter (manually input)
-prepend = '/data/activeTracking-reorg1' # Change to empty string after zenodo get
-parent_path = prepend + '/data/processed'
+prepend = '/data' # Change to empty string after zenodo get
+parent_path = prepend + '/processed'
 if (not os.path.isdir(parent_path)):
     print("Using precomputed outputs")
     parent_path = '../data/preprocessed'

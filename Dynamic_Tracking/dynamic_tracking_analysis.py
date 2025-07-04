@@ -26,8 +26,8 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 
 # Main data paths for each catheter (manually input)
-prepend = '/data/activeTracking-reorg1' # Change to empty string after zenodo get
-parent_path = prepend + '/data/processed/dynamic/'
+prepend = '/data' # Change to empty string after zenodo get
+parent_path = prepend + '/processed/dynamic/'
 if (not os.path.isdir(parent_path)):
     print("Using precomputed outputs")
     parent_path = '../data/preprocessed/dynamic/'
