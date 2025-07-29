@@ -25,7 +25,7 @@ def nonuniform_imshow(x, y, z, stddev=[], numeric=False, aspect = 1, cmap = plt.
     if numeric and (len(stddev) == len(z)):
             for i in range(0,len(z)):
                 txt = f"{z[i]:.1f}\u00B1{stddev[i]:.1f}"
-                ax.text(x[i]-5, y[i], txt)
+                ax.text(x[i]-10, y[i], txt, fontsize='xx-large')
     else:
         ax.scatter(x, y, c = 'k')
 
