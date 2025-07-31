@@ -3,7 +3,7 @@
 
 # # Imports
 
-# In[1]:
+# In[4]:
 
 
 import numpy as np 
@@ -18,7 +18,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # # Constants and Paths
 
-# In[2]:
+# In[5]:
 
 
 # Main data paths for each catheter (manually input)
@@ -48,7 +48,7 @@ geometry_index = 1
 # 
 # For each sequence and localization algorithm of interest, plot the heatmap of average tip errors at each position. Each position has recordings from three catheters.
 
-# In[3]:
+# In[6]:
 
 
 sequences = ['SRI_Original', 'FH512_noDither_gradSpoiled']
@@ -73,16 +73,16 @@ for seq in sequences:
 
         heatmap = static_utils.nonuniform_imshow(X, Y, Z, stddev, numeric=True)
         plt.gca().invert_yaxis()
-        plt.xlabel('X-Position (mm from isocentre)', fontsize = 18, fontweight = 'bold', labelpad = 10)
-        plt.ylabel('Z-Position (mm from isocentre)', fontsize = 18, fontweight = 'bold', labelpad = 10)
-        plt.xticks(fontsize = 16)
-        plt.yticks(fontsize = 16)
+        plt.xlabel('X-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+        plt.ylabel('Z-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+        plt.xticks(fontsize = 18)
+        plt.yticks(fontsize = 18)
         print('Tip Tracking Error @ Y = 20mm sequence {0}, algorithm {1}'.format(seq, alg))
         cbar = plt.colorbar(heatmap)
         cbar.ax.set_yticklabels(['0', '1', '2', '3', '4', '\u2265' + '5'])
         cbar.ax.get_yaxis().labelpad = 30
-        cbar.ax.tick_params(labelsize = 16) 
-        cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 18, fontweight = 'bold')
+        cbar.ax.tick_params(labelsize = 18)
+        cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 20, fontweight = 'bold')
         
         if not os.path.isdir('{0}'.format(heatmap_path)):
             os.makedirs('{0}'.format(heatmap_path))
@@ -114,7 +114,7 @@ for seq in sequences:
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[4]:
+# In[7]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:

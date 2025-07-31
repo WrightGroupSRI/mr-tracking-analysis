@@ -75,16 +75,16 @@ for seq in sequences:
 
         heatmap = static_utils.nonuniform_imshow(X, Y, Z, stddev, numeric=True)
         plt.gca().invert_yaxis()
-        plt.xlabel('X-Position (mm from isocentre)', fontsize = 18, fontweight = 'bold', labelpad = 10)
-        plt.ylabel('Z-Position (mm from isocentre)', fontsize = 18, fontweight = 'bold', labelpad = 10)
-        plt.xticks(fontsize = 16)
-        plt.yticks(fontsize = 16)
+        plt.xlabel('X-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+        plt.ylabel('Z-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+        plt.xticks(fontsize = 18)
+        plt.yticks(fontsize = 18)
         print('Tip Tracking Error @ Y = -5mm sequence {0}, algorithm {1}'.format(seq, alg))
         cbar = plt.colorbar(heatmap)
         cbar.ax.set_yticklabels(['0', '1', '2', '3', '4', '\u2265' + '5'])
         cbar.ax.get_yaxis().labelpad = 30
-        cbar.ax.tick_params(labelsize = 16) 
-        cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 18, fontweight = 'bold')
+        cbar.ax.tick_params(labelsize = 18)
+        cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 20, fontweight = 'bold')
         
         if not os.path.isdir('{0}'.format(heatmap_path)):
             os.makedirs('{0}'.format(heatmap_path))
