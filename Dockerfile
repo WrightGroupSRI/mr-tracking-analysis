@@ -3,12 +3,10 @@
 # for reproducible analysis
 #
 # Run the following commands first:
-# 1. eval "$(ssh-agent)"
-# 2. ssh-add
-# 3. export DOCKER_BUILDKIT=1
+# 1. export DOCKER_BUILDKIT=1
 #
 # Then build the image with:
-# docker build --ssh default -t mr-tracking:x.y .
+# docker build -t mr-tracking:x.y .
 #
 # To run the analysis:
 # 1. From the terminal:
@@ -37,25 +35,25 @@ WORKDIR /opt/dock-cat/
 
 ARG MAMBA_DOCKERFILE_ACTIVATE=1 # For pip and python commands to work
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/catheter_utils.git catheter_utils
+RUN git clone https://github.com/WrightGroupSRI/catheter_utils.git catheter_utils
 RUN pip install -e catheter_utils
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/catheter_ukf.git catheter_ukf
+RUN git clone https://github.com/WrightGroupSRI/catheter_ukf.git catheter_ukf
 RUN pip install -e catheter_ukf
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/dicom_utils.git dicom_utils
+RUN git clone https://github.com/WrightGroupSRI/dicom_utils.git dicom_utils
 RUN pip install -e dicom_utils
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/dicom_art.git dicom_art
+RUN git clone https://github.com/WrightGroupSRI/dicom_art.git dicom_art
 RUN pip install -e dicom_art
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/get_gt.git get_gt
+RUN git clone https://github.com/WrightGroupSRI/get_gt.git get_gt
 RUN pip install -e get_gt
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:WrightGroupSRI/cathy.git cathy
+RUN git clone https://github.com/WrightGroupSRI/cathy.git cathy
 RUN pip install -e cathy
 
-RUN --mount=type=ssh,mode=0666 git clone git@github.com:labonny/zenodo_get.git -b sandbox-fix --single-branch zenodo_get
+RUN git clone https://github.com/labonny/zenodo_get.git -b sandbox-fix --single-branch zenodo_get
 RUN pip install -e zenodo_get
 
 COPY <<EOF /home/$MAMBA_USER/.jupyter/jupyter_notebook_config.py
