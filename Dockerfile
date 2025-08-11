@@ -16,6 +16,22 @@
 ################################################
 
 FROM mambaorg/micromamba:1.5.8-alpine3.20
+
+ARG NEW_MAMBA_USER_ID=1000
+ARG NEW_MAMBA_USER_GID=1000
+USER root
+
+RUN if grep -q '^ID=alpine$' /etc/os-release; then \
+      # alpine does not have usermod/groupmod
+      apk add --no-cache --virtual temp-packages shadow; \
+    fi && \
+    usermod "-u ${NEW_MAMBA_USER_ID}" "${MAMBA_USER}" && \
+    groupmod "-g ${NEW_MAMBA_USER_GID}" "${MAMBA_USER}" && \
+    if grep -q '^ID=alpine$' /etc/os-release; then \
+      # remove the packages that were only needed for usermod/groupmod
+      apk del temp-packages; \
+    fi
+
 COPY --chown=$MAMBA_USER:$MAMBA_USER env.yaml /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
     micromamba clean --all --yes
@@ -27,9 +43,6 @@ RUN apk add --no-cache \
     glib libsm-dev libxrender libxext-dev
 
 USER $MAMBA_USER
-
-# ssh keys required for private github repo access
-RUN mkdir ~/.ssh && ssh-keyscan -H github.com > ~/.ssh/known_hosts
 
 WORKDIR /opt/dock-cat/
 
@@ -76,9 +89,10 @@ EOF
 
 USER root
 RUN mkdir /data
-RUN mkdir /code
-RUN chown -R $MAMBA_USER:$MAMBA_USER /home/$MAMBA_USER/.jupyter /data /code
+RUN ln -s /home/$MAMBA_USER /code
+RUN chown -R $MAMBA_USER:$MAMBA_USER /code /home/$MAMBA_USER/.jupyter /data
 RUN chmod a+w /home/$MAMBA_USER/.jupyter
 USER $MAMBA_USER
-COPY --chown=$MAMBA_USER:$MAMBA_USER . /code/
+COPY --chown=$MAMBA_USER:$MAMBA_USER . /home/$MAMBA_USER/
+ENV PATH="${PATH}:/home/$MAMBA_USER/.local/bin/"
 WORKDIR /code
