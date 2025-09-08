@@ -21,7 +21,21 @@ The preprocessed data has been reconstructed from the raw recordings, and the lo
 ## Binder
 - [ ] To be tested
 ## Docker
-- [ ] To document
+The docker image will be available from dockerhub (LINK TO COME)
+### Build
+To build the docker image yourself, you need docker installed. Download or clone the sources. Then, from the terminal in the code directory:
+```bash
+export DOCKER_BUILDKIT=1
+docker build -t mr-tracking .
+```
+### Run
+- From the terminal
+```bash
+docker run --rm -p 8888:8888 mr-tracking:latest jupyter notebook --ip 0.0.0.0 --no-browser
+```
+- Open the 127.0.0.1 link shown in the terminal in your web browser
+- Open and run **RunAnalysis.ipynb** from the jupyter interface
+- From the "Cell" menu, select "Run All" to run the analysis
 # Code
 The notebooks and other code in this repository organize and graph the results from the experiments.
 
