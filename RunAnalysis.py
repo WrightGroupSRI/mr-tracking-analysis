@@ -2,30 +2,35 @@
 # coding: utf-8
 
 # # Active catheter tracking notebook: test run
-# To run the full pipeline from raw data download through reconstruction and analysis requires resources that may not be available depending on your setup: about 5 GB storage and a few minutes on a single processor (less time required for a multi-processor system). On cloud notebooks, where these resources may not be available, in which case, skip to the Analysis section, which uses precomputed outputs from the reconstruction and localization if the notebook-processed outputs are not available.
+# To run the full pipeline from raw data download through reconstruction and analysis requires resources that may not be available depending on your setup: about 5 GB storage and a few minutes on a single processor, with less time required for a multi-processor system. On resource-limited systems where storage and computation resources may not be available, skip to the [Analysis](#analysis) section, which uses precomputed outputs from the reconstruction and localization if the notebook-processed outputs are not available.
 # 
 # The notebook is broken down into:
 # - [Download](#download) the raw tracking projections from each experiment
 # - [Localize](#localize): Reconstruct signals and localize the coils using each algorithm
 # - [Verify](#verify) the results against preprocessed data
-# - [Analysis](#analysis): Run the static and dynamic analysis notebooks. Output is shown here
+# - [Analysis](#analysis): Run the static and dynamic analysis notebooks. **SKIP TO HERE** if you don't want to download the full 5GB dataset and reconstruct the raw data on your system.
 
 # # Download dataset from Zenodo <a class="anchor" id="download"></a>
 # 
-# Test [zenodo_get](https://github.com/dvolgyes/zenodo_get) to download a subset of a dataset, with record #10676292. The "-g" option specifies the pattern we're looking for. Until our dataset is uploaded, testing things with a random dataset:
+# Download the raw data from the Active Tracking Dataset. For now, we download from the sandbox until the pipeline is fully tested:
 
-# In[93]:
-
-
-get_ipython().system('zenodo_get -g ROIs.zip 10676292')
+# In[1]:
 
 
-# The above ROIs.zip won't be used, delete it:
+#!zenodo_get 295280 -g raw.zip --sandbox -o /data
+get_ipython().system('wget -P /data https://sandbox.zenodo.org/records/295280/files/raw.zip')
 
-# In[94]:
+
+# In[2]:
 
 
-get_ipython().system('rm ROIs.zip')
+get_ipython().system('cd /data && unzip -qn raw.zip')
+
+
+# In[3]:
+
+
+get_ipython().system('cd /code')
 
 
 # **Warning** Download of the active tracking raw data requires approximately 5 GB of space. If you prefer, skip ahead to the analysis section which uses the precomputed outputs.
@@ -44,7 +49,7 @@ get_ipython().system('rm ROIs.zip')
 # - input_dir: /data/raw/static/trackTest-13Dec2021-C306-Y0/1/FH512_noDither_gradSpoiled-2021-12-13T13_02_33.756
 # - output_dir: /data/localize_c306-y0-1-fh
 
-# In[95]:
+# In[4]:
 
 
 import csv
@@ -58,20 +63,20 @@ from IPython.display import display
 import numpy as np
 
 
-# In[96]:
+# In[5]:
 
 
 note_dir = os.getcwd()
 note_dir
 
 
-# In[97]:
+# In[6]:
 
 
 mp.cpu_count()
 
 
-# In[98]:
+# In[7]:
 
 
 get_ipython().system('cathy localize -d 6 -p 7 /data/raw/static/trackTest-13Dec2021-C306-Y0/1/FH512_noDither_gradSpoiled-2021-12-13T13_02_33.756 /data/localize_c306-y0-1-fh ')
@@ -79,7 +84,7 @@ get_ipython().system('cathy localize -d 6 -p 7 /data/raw/static/trackTest-13Dec2
 
 # Test the equivalent regular python method, with option to set which algorithms to run:
 
-# In[99]:
+# In[8]:
 
 
 import cathy.cli as cat
@@ -87,11 +92,20 @@ import cathy.cli as cat
 
 # The full list of raw data directories is in the included csv file.
 
-# In[100]:
+# In[9]:
 
 
 recordings_csv = note_dir + '/data/meta/catheter_raw_recordings.csv'
 prepend = '/data/'
+
+
+# In[10]:
+
+
+procdir = prepend+'processed' # processed data should be here if download & localization work
+
+def data_processed(procdir=procdir):
+    return os.path.isdir(procdir) and len(os.listdir(procdir)) != 0
 
 
 # The below cell will reconstruct all the raw data and run the localization algorithms using a single cpu: this will be slow. On non-binder instance: Skip this and run the next two cells to distribute the work across cpus & finish faster.
@@ -120,14 +134,14 @@ prepend = '/data/'
 #             cat.run_localize(str(source), str(dest), distal, proximal, algos=['centroid_around_peak', 'jpng'])
 # ```
 
-# In[101]:
+# In[11]:
 
 
 TOL = 0.05
 MAX_ITER = 32
 
 
-# In[102]:
+# In[12]:
 
 
 def call_localize(args):
@@ -145,38 +159,40 @@ def call_localize(args):
     
 
 
-# In[103]:
+# In[13]:
 
 
 print(os.getenv("CPU_LIMIT"))
 
 
-# In[104]:
+# In[14]:
 
 
-get_ipython().run_cell_magic('time', '', '# list of preprocessed & processed output directories and coil args\nexperiment_data_tuples = {\'static\':[], \'dynamic\':[], \'vivo\': []}\n\ndoRun = True # True to run cathy localize: ow/ will fill in the data_tuples but not run localize\n\nnew_dir_list = [] #compare reorg processed directory to repo preprocessed directory\nrepo_dir = note_dir + \'/data/\'\n\ncpu_limit_env = os.getenv("CPU_LIMIT")\nif cpu_limit_env is None:\n    cpu_count = mp.cpu_count()\nelse:\n    cpu_count = cpu_limit_env\n# set up the localize arguments based on the spreadsheet:\nwith open(recordings_csv,\'r\') as csvfile:\n    rdr = csv.DictReader(csvfile)\n    for row in rdr:\n        raw_dir = pathlib.PurePath(row[\'Input\'])\n        expmt = \'dynamic\'\n        if \'static\' in str(raw_dir):\n            expmt = \'static\'\n        elif \'vivo\' in str(raw_dir):\n            expmt = \'vivo\'\n        source = pathlib.PurePath(prepend).joinpath(raw_dir)\n        distal = int(row[\'distal\'])\n        proximal = int(row[\'proximal\'])\n        dest = pathlib.PurePath(prepend).joinpath(\'processed\').joinpath(pathlib.PurePath(*raw_dir.parts[1:]))\n        experiment_data_tuples[expmt].append( (str(source), dest, distal, proximal, TOL, MAX_ITER))\n        preproc = pathlib.PurePath(repo_dir).joinpath(\'preprocessed\').joinpath(pathlib.PurePath(*raw_dir.parts[1:]))\n        new_dir_list.append( (preproc,dest))\n        os.makedirs(dest, exist_ok=True)\n\n# data_tuples contains our arguments: we can split the processing across cpus for performance\nprint("Running localize on " + str(len(experiment_data_tuples[\'static\'])) + " static directories, " \\\n     + str(len(experiment_data_tuples[\'dynamic\'])) + " dynamic directories, and " + \\\n      str(len(experiment_data_tuples[\'vivo\'])) + " in vivo directories")\npool = mp.Pool(mp.cpu_count())\n\niterations_overall = {\'jpng\':[]} # accumulate iterations required for each recording\n\niterations_xpmt = { \'static\':{\'jpng\':[]}, \'dynamic\':{\'jpng\':[]}, \'vivo\':{\'jpng\':[]}} #separated by experiment type\n\nif doRun:\n    for xkey in experiment_data_tuples.keys():\n        print("Experiment: " + xkey)\n        for result in pool.map( call_localize, [experiment_data_tuples[xkey][i:i+1] for i in range(0,len(experiment_data_tuples[xkey]))] ):\n            for key in result.keys():\n                if key in iterations_overall:\n                    iterations_overall[key] = np.concatenate((iterations_overall[key],result[key]))\n                    iterations_xpmt[xkey][key] = np.concatenate( (iterations_xpmt[xkey][key],result[key]) )')
+get_ipython().run_cell_magic('time', '', '# list of preprocessed & processed output directories and coil args\nexperiment_data_tuples = {\'static\':[], \'dynamic\':[], \'vivo\': []}\n\ndoRun = True # True to run cathy localize: ow/ will fill in the data_tuples but not run localize\n\nnew_dir_list = [] #compare reorg processed directory to repo preprocessed directory\nrepo_dir = note_dir + \'/data/\'\n\ncpu_limit_env = os.getenv("CPU_LIMIT")\nif cpu_limit_env is None:\n    cpu_count = mp.cpu_count()\nelse:\n    cpu_count = cpu_limit_env\n# set up the localize arguments based on the spreadsheet:\nwith open(recordings_csv,\'r\') as csvfile:\n    rdr = csv.DictReader(csvfile)\n    for row in rdr:\n        raw_dir = pathlib.PurePath(row[\'Input\'])\n        expmt = \'dynamic\'\n        if \'static\' in str(raw_dir):\n            expmt = \'static\'\n        elif \'vivo\' in str(raw_dir):\n            expmt = \'vivo\'\n        source = pathlib.PurePath(prepend).joinpath(raw_dir)\n        distal = int(row[\'distal\'])\n        proximal = int(row[\'proximal\'])\n        dest = pathlib.PurePath(prepend).joinpath(\'processed\').joinpath(pathlib.PurePath(*raw_dir.parts[1:]))\n        experiment_data_tuples[expmt].append( (str(source), dest, distal, proximal, TOL, MAX_ITER))\n        preproc = pathlib.PurePath(repo_dir).joinpath(\'preprocessed\').joinpath(pathlib.PurePath(*raw_dir.parts[1:]))\n        if os.path.isdir(source):\n            new_dir_list.append( (preproc,dest))\n            os.makedirs(dest, exist_ok=True)\n        else:\n            raise Exception("Missing raw data: Please skip directly to the Analysis section near the end of this notebook")\n\n# data_tuples contains our arguments: we can split the processing across cpus for performance\nprint("Running localize on " + str(len(experiment_data_tuples[\'static\'])) + " static directories, " \\\n     + str(len(experiment_data_tuples[\'dynamic\'])) + " dynamic directories, and " + \\\n      str(len(experiment_data_tuples[\'vivo\'])) + " in vivo directories")\npool = mp.Pool(mp.cpu_count())\n\niterations_overall = {\'jpng\':[]} # accumulate iterations required for each recording\n\niterations_xpmt = { \'static\':{\'jpng\':[]}, \'dynamic\':{\'jpng\':[]}, \'vivo\':{\'jpng\':[]}} #separated by experiment type\n\nif doRun:\n    for xkey in experiment_data_tuples.keys():\n        print("Experiment: " + xkey)\n        for result in pool.map( call_localize, [experiment_data_tuples[xkey][i:i+1] for i in range(0,len(experiment_data_tuples[xkey]))] ):\n            for key in result.keys():\n                if key in iterations_overall:\n                    iterations_overall[key] = np.concatenate((iterations_overall[key],result[key]))\n                    iterations_xpmt[xkey][key] = np.concatenate( (iterations_xpmt[xkey][key],result[key]) )')
 
 
-# In[105]:
+# In[15]:
 
 
-for key in iterations_overall.keys():
-    print(f"{key}: mean iterations {np.mean(iterations_overall[key])}\t, median {np.median(iterations_overall[key])},    min {np.min(iterations_overall[key])}, max {np.max(iterations_overall[key])}")
-    print(f"percentage of iterations reaching 32: {np.count_nonzero(iterations_overall[key] == 32)/len(iterations_overall[key]) * 100:.2f}")
+if data_processed():
+    for key in iterations_overall.keys():
+        print(f"{key}: mean iterations {np.mean(iterations_overall[key])}\t, median {np.median(iterations_overall[key])},        min {np.min(iterations_overall[key])}, max {np.max(iterations_overall[key])}")
+        print(f"percentage of iterations reaching 32: {np.count_nonzero(iterations_overall[key] == 32)/len(iterations_overall[key]) * 100:.2f}")
 
 
-# In[106]:
+# In[16]:
 
 
-for xkey in iterations_xpmt:
-    print(f"Experiment set: {xkey}")
-    for key in iterations_xpmt[xkey]:
-        print(f"\t{key}: mean iterations {np.mean(iterations_xpmt[xkey][key])}\t,         median {np.median(iterations_xpmt[xkey][key])},        min {np.min(iterations_xpmt[xkey][key])}, max {np.max(iterations_xpmt[xkey][key])}")
-        print(f"\tpct iterations reaching 32: {np.count_nonzero(iterations_xpmt[xkey][key]==32)/len(iterations_xpmt[xkey][key]) * 100:.2f}")
+if data_processed():
+    for xkey in iterations_xpmt:
+        print(f"Experiment set: {xkey}")
+        for key in iterations_xpmt[xkey]:
+            print(f"\t{key}: mean iterations {np.mean(iterations_xpmt[xkey][key])}\t,             median {np.median(iterations_xpmt[xkey][key])},            min {np.min(iterations_xpmt[xkey][key])}, max {np.max(iterations_xpmt[xkey][key])}")
+            print(f"\tpct iterations reaching 32: {np.count_nonzero(iterations_xpmt[xkey][key]==32)/len(iterations_xpmt[xkey][key]) * 100:.2f}")
         
 
 
-# In[107]:
+# In[17]:
 
 
 import os
@@ -186,20 +202,21 @@ print(os.cpu_count())
 # # Copy ground truth data to processed directory
 # Ground truth files are expected in the processed directory for later analysis. These should be copied from the raw subdirectories to the corresponding processed subdirectories. A list of these files is in meta/gt_files.txt
 
-# In[108]:
+# In[18]:
 
 
-gtf = open(note_dir + '/data/meta/gt_files.txt','r')
-gt_list = gtf.readlines()
-for gt_file in gt_list:
-    gt_path = pathlib.PurePath(gt_file.rstrip())
-    src = pathlib.PurePath(prepend).joinpath(gt_path)
-    dest = pathlib.PurePath(prepend).joinpath('processed').joinpath(pathlib.PurePath(*gt_path.parts[1:]))
-    dest_dir = pathlib.PurePath(*dest.parts[:-1])
-    print('dest dir: ' + str(dest_dir))
-    os.makedirs(dest_dir, exist_ok=True)
-    print('cp ' + str(src) + ' ' + str(dest))
-    shutil.copyfile(src,dest)
+if data_processed():
+    gtf = open(note_dir + '/data/meta/gt_files.txt','r')
+    gt_list = gtf.readlines()
+    for gt_file in gt_list:
+        gt_path = pathlib.PurePath(gt_file.rstrip())
+        src = pathlib.PurePath(prepend).joinpath(gt_path)
+        dest = pathlib.PurePath(prepend).joinpath('processed').joinpath(pathlib.PurePath(*gt_path.parts[1:]))
+        dest_dir = pathlib.PurePath(*dest.parts[:-1])
+        print('dest dir: ' + str(dest_dir))
+        os.makedirs(dest_dir, exist_ok=True)
+        print('cp ' + str(src) + ' ' + str(dest))
+        shutil.copyfile(src,dest)
     
 
 
@@ -208,7 +225,7 @@ for gt_file in gt_list:
 # 
 # Note we have updated the preprocessed coordinates with output using the current algorithm parameters: the next cell is redundant as we have the checksums in a later step.
 
-# In[109]:
+# In[19]:
 
 
 #```python
@@ -262,7 +279,7 @@ print("\nErrors: " + str(error_count))
 # # Hash of files
 # The processed files should match with the preprocessed data. A checksum file "md5sums.txt" was created for all the cathcoords outputs.
 
-# In[110]:
+# In[20]:
 
 
 def generate_md5(filename, chunk_size=4096):
@@ -289,7 +306,7 @@ def generate_md5(filename, chunk_size=4096):
 
 # ## Verify processed files against md5sums
 
-# In[111]:
+# In[21]:
 
 
 preproc_md5_sum = note_dir + '/data/meta/proc_md5sums.txt'
@@ -317,26 +334,26 @@ with open(preproc_md5_sum, "r") as f:
 print('\nErrors: ' + str(error_count))
 
 
-# In[112]:
+# In[22]:
 
 
 cpu_limit = os.environ.get("CPU_LIMIT")
 
 
-# In[113]:
+# In[23]:
 
 
 if cpu_limit is None:
     cpu_limit = os.cpu_count()
 
 
-# In[114]:
+# In[24]:
 
 
 cpu_limit
 
 
-# In[115]:
+# In[25]:
 
 
 def get_cpu_quota_within_docker():
@@ -353,25 +370,25 @@ def get_cpu_quota_within_docker():
     return cpu_cores
 
 
-# In[116]:
+# In[26]:
 
 
 cpu_cores = get_cpu_quota_within_docker()
 
 
-# In[117]:
+# In[27]:
 
 
 cpu_cores
 
 
-# In[118]:
+# In[28]:
 
 
 get_ipython().system('cat /sys/fs/cgroup/cpu/cpu.cfs_quota_us')
 
 
-# In[119]:
+# In[29]:
 
 
 get_ipython().system('cat /sys/fs/cgroup/cpu/cpu.cfs_period_us')
@@ -381,40 +398,46 @@ get_ipython().system('cat /sys/fs/cgroup/cpu/cpu.cfs_period_us')
 # The notebooks are in subdirectories. We call each notebook in turn below.
 # ## Static Tracking
 
-# In[120]:
+# In[30]:
 
 
 get_ipython().run_line_magic('cd', 'Static_Tracking')
 get_ipython().run_line_magic('run', 'static_tracking_heatmaps_Y0.ipynb')
 
 
-# In[121]:
+# In[31]:
 
 
 get_ipython().run_line_magic('run', 'static_tracking_heatmaps_Y1.ipynb')
 
 
-# In[122]:
+# In[32]:
 
 
 get_ipython().run_line_magic('run', 'static_tracking_heatmaps_Y2.ipynb')
 
 
-# In[123]:
+# In[33]:
 
 
 get_ipython().run_line_magic('cd', '../Dynamic_Tracking')
 get_ipython().run_line_magic('run', 'dynamic_tracking_analysis.ipynb')
 
 
-# In[124]:
+# In[34]:
 
 
 get_ipython().run_line_magic('cd', '../Invivo_Tracking')
 get_ipython().run_line_magic('run', 'invivo_tracking_analysis.ipynb')
 
 
-# In[125]:
+# In[36]:
+
+
+get_ipython().system('ls /code/')
+
+
+# In[ ]:
 
 
 # Reset to main directory
