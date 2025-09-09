@@ -318,17 +318,22 @@ def plot_tracked_vs_expected(tracked, expected, start_idx, plot_path, save=True)
     return
 
 
-def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
+def plot_motion_error(tracked, expected, start_idx, plot_path, save=True, compare_tracked=None, algo_names = []):
     """ Plot the tracked and expected coordinates vs time"""
     # tracked: dataframe with tracked coords for all coils
     # expected: dataframe of expected motion
     # start_idx: index at which motion starts from 0 position
     # plot_path: path at which to save plots
+    # save: optionally saves plots to files
+    # compare_tracked: a second dataframe with tracked coords for all coils from a different algorithm
+    # algo_names: set this to an array of the two algorithm labels if using "compare_tracked"
+    
 
     catheter = tracked['Catheter'][0]
     profile = tracked['Profile'][0]
     sequence = tracked['Sequence'][0]
     coil = tracked['Coil'][0]
+    algo_first = ''
 
     # Only get values for times of expected motion
     tracked_error = (tracked[start_idx : start_idx + len(expected)]).copy()
@@ -340,6 +345,18 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
 
     total_error = ((tracked_error['Error in X'])**2 + (tracked_error['Error in Y'])**2 + (tracked_error['Error in Z'])**2)**0.5
     tracked_error['Total Error'] = total_error
+    
+    # tracking error from optional second algorithm
+    tracked_error_cmp = []
+    if (compare_tracked is not None):
+        assert(len(algo_names) == 2, "Require two labels in algo_names when using second set of coordinates")
+        tracked_error_cmp = (compare_tracked[start_idx : start_idx + len(expected)]).copy()
+        tracked_error_cmp.reset_index(drop=True, inplace=True)
+    
+        tracked_error_cmp['Error in X'] = abs(tracked_error_cmp['Tracked X'] - expected['Expected X'])
+        tracked_error_cmp['Error in Y'] = abs(tracked_error_cmp['Tracked Y'] - expected['Expected Y'])
+        tracked_error_cmp['Error in Z'] = abs(tracked_error_cmp['Tracked Z'] - expected['Expected Z'])
+        algo_first = algo_names[0]
 
     sns.set_style("whitegrid", {'grid.color': '0.8', 'axes.edgecolor': 'black', 'axes.spines.right': False, 'axes.spines.top': False, 'xtick.bottom': True, 'ytick.left': True})
     fig1, axes = plt.subplots(3, 1, sharex = True, figsize = (18, 24))
@@ -355,10 +372,16 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
     mean_y = np.round(np.mean(tracked_error['Error in Y']), 1)
     mean_z = np.round(np.mean(tracked_error['Error in Z']), 1)
 
+    if (compare_tracked is not None):
+        mean_x = np.round(np.mean([tracked_error['Error in X'],tracked_error_cmp['Error in X']]), 1)
+        mean_y = np.round(np.mean([tracked_error['Error in Y'],tracked_error_cmp['Error in Y']]), 1)
+        mean_z = np.round(np.mean([tracked_error['Error in Z'],tracked_error_cmp['Error in Z']]), 1)
     # Plot X, Y, Z error
     
     # X error
-    sns.lineplot(ax = axes[0], x = tracked_error['Time'], y = tracked_error['Error in X'], label = 'X Error', linewidth = 2)
+    sns.lineplot(ax = axes[0], x = tracked_error['Time'], y = tracked_error['Error in X'], label = 'X Error ' + algo_first, linewidth = 2)
+    if (compare_tracked is not None):
+        sns.lineplot(ax = axes[0], x = tracked_error_cmp['Time'], y = tracked_error_cmp['Error in X'], label = 'X Error ' + algo_names[1], linewidth = 2)
     axes[0].axhline(y = mean_x, color = 'g', linestyle = '--', label = 'Mean X Error = {}mm'.format(mean_x), linewidth = 2)
     axes[0].set_ylabel('Error (mm)', fontsize = 48)
     axes[0].set_ylim(low, high)
@@ -370,7 +393,9 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
     axes[0].legend(loc = 'upper right', fontsize = 32)
 
     # Y Error
-    sns.lineplot(ax = axes[1], x = tracked_error['Time'], y = tracked_error['Error in Y'], label = 'Y Error', linewidth = 2)
+    sns.lineplot(ax = axes[1], x = tracked_error['Time'], y = tracked_error['Error in Y'], label = 'Y Error ' + algo_first, linewidth = 2)
+    if (compare_tracked is not None):
+        sns.lineplot(ax = axes[1], x = tracked_error_cmp['Time'], y = tracked_error_cmp['Error in Y'], label = 'Y Error ' + algo_names[1], linewidth = 2)
     axes[1].axhline(y = mean_y, color = 'g', linestyle = '--', label = 'Mean Y Error = {}mm'.format(mean_y), linewidth = 2)
     axes[1].set_ylabel('Error (mm)', fontsize = 48)
     axes[1].set_ylim(low, high)
@@ -382,7 +407,9 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
     axes[1].legend(loc = 'upper right', fontsize = 32)
 
     # Z Error
-    sns.lineplot(ax = axes[2], x = tracked_error['Time'], y = tracked_error['Error in Z'], label = 'Z Error', linewidth = 2)
+    sns.lineplot(ax = axes[2], x = tracked_error['Time'], y = tracked_error['Error in Z'], label = 'Z Error ' + algo_first, linewidth = 2)
+    if (compare_tracked is not None):
+        sns.lineplot(ax = axes[2], x = tracked_error_cmp['Time'], y = tracked_error_cmp['Error in Z'], label = 'Z Error ' + algo_names[1], linewidth = 2)
     axes[2].axhline(y = mean_z, color = 'g', linestyle = '--', label = 'Mean Z Error = {}mm'.format(mean_z), linewidth = 2)
     axes[2].set_xlabel('Time (ms)', fontsize = 48)
     axes[2].set_ylabel('Error (mm)', fontsize = 48)
@@ -399,8 +426,10 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True):
         if not os.path.isdir(plot_path + '{}/{}/{}'.format(profile, sequence, coil)):
             os.makedirs(plot_path + '{}/{}/{}'.format(profile, sequence, coil))
         
-        fig1.savefig(plot_path + '{}/{}/{}/motion_error_xyz.pdf'.format(profile, sequence, coil), dpi=600)
-
+        if (compare_tracked is None):
+            fig1.savefig(plot_path + '{}/{}/{}/motion_error_xyz.pdf'.format(profile, sequence, coil), dpi=600)
+        else:
+            fig1.savefig(plot_path + '{}/{}/{}/compare_motion_error_xyz.pdf'.format(profile, sequence, coil), dpi=600)
     plt.show()
 
     return
