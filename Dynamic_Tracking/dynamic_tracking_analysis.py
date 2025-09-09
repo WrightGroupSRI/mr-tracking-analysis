@@ -773,7 +773,7 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 # In[14]:
 
 
-# Merge data for error boxplots, plot them, and save them to directory
+# Merge data for error boxplots, plot them to compare error across sequences, and save them to directory
 
 plot_df_resp = merge_plot_dfs([SRI_2_jpng_plot_df_231_resp, SRI_2_jpng_plot_df_299_resp, SRI_2_jpng_plot_df_306_resp, FH512_2_jpng_plot_df_231_resp, FH512_2_jpng_plot_df_299_resp, FH512_2_jpng_plot_df_306_resp])
 plot_df_card = merge_plot_dfs([SRI_2_jpng_plot_df_231_card, SRI_2_jpng_plot_df_299_card, SRI_2_jpng_plot_df_306_card, FH512_2_jpng_plot_df_231_card, FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
@@ -786,6 +786,22 @@ plot_error_box_plot(plot_df_card, box_plot_path, sequences)
 
 
 # In[15]:
+
+
+# Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
+# Only for the HM (FH512) sequence
+algos = [jpng,cap]
+hm_plot_df_resp = merge_plot_dfs([FH512_2_cap_plot_df_231_resp, FH512_2_cap_plot_df_299_resp,                                   FH512_2_cap_plot_df_306_resp, FH512_2_jpng_plot_df_231_resp,                                   FH512_2_jpng_plot_df_299_resp, FH512_2_jpng_plot_df_306_resp])
+hm_plot_df_card = merge_plot_dfs([FH512_2_cap_plot_df_231_card, FH512_2_cap_plot_df_299_card,                                   FH512_2_cap_plot_df_306_card, FH512_2_jpng_plot_df_231_card,                                   FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
+
+print("Respiratory Motion Profile: HM Tip Error by Algorithm")
+plot_error_box_plot(hm_plot_df_resp, box_plot_path, algos, plotBy="Algorithm")
+
+print("Cardiac Motion Profile: HM Tip Error by Algorithm")
+plot_error_box_plot(hm_plot_df_card, box_plot_path, algos, plotBy="Algorithm")
+
+
+# In[16]:
 
 
 print('Respiratory Motion: JPNG Tip Error')
@@ -814,7 +830,7 @@ print(f'\t3P: {card_3p_mean:.2f}\u00B1{card_3p_std:.2f} mm')
 # # HDF5 Exports
 # Each of the error dataframes - named according to sequence, algorithm, catheter, and motion profile - has been saved as a group into the dynamic_tracking_tip_errors.h5 file. To examine a particular data frame, use the pandas [read_hdf](https://pandas.pydata.org/docs/reference/api/pandas.read_hdf.html) method as shown below:
 
-# In[16]:
+# In[17]:
 
 
 pd.read_hdf(h5out, key="C3P_CAP_cath306_cardiac")

@@ -493,7 +493,7 @@ def pval_to_stars(pval):
     else:
         return ''
 
-def plot_error_box_plot(plot_df, plot_path, sequences, save=True):
+def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=True):
     """Plots boxplot with plot_df being the dataframe with the sequence, coil, and total error info"""
     
     catheter = plot_df['Catheter'][0]
@@ -501,7 +501,7 @@ def plot_error_box_plot(plot_df, plot_path, sequences, save=True):
     sequence = plot_df['Sequence'][0]
     algorithm = plot_df['Algorithm'][0]
 
-    plot_df['Sequence'] = pd.Categorical(plot_df['Sequence'], categories=[sequences[1], sequences[0]], ordered=True)
+    plot_df[plotBy] = pd.Categorical(plot_df[plotBy], categories=[categories[1], categories[0]], ordered=True)
     # plot_df['Algorithm'] = pd.Categorical(plot_df['Algorithm'], categories=['jpng', 'centroid_around_peak'], ordered=True)
 
     sns.set_style("whitegrid", {'grid.color': '0.8', 'axes.edgecolor': 'black', 'axes.spines.right': False, 'axes.spines.top': False, 'xtick.bottom': True, 'ytick.left': True})
@@ -509,14 +509,14 @@ def plot_error_box_plot(plot_df, plot_path, sequences, save=True):
     fig = plt.figure(figsize = (9, 8))
 
     ### Uncomment the next 3 lines if you want to generate tip tracking boxplots separated by sequences only, otherwise leave them commented ###
-    ax1 = sns.boxplot(x = plot_df['Sequence'], y = plot_df['Total Error'], orient = 'v', width = 0.4, showfliers = False, linewidth = 2, palette = "Set2")
+    ax1 = sns.boxplot(x = plot_df[plotBy], y = plot_df['Total Error'], orient = 'v', width = 0.4, showfliers = False, linewidth = 2, palette = "Set2")
     plt.ylabel('Total Tip Error (mm)', fontsize = 36)
     # plt.ylabel('Total Tip Error (mm)', fontsize = 20, fontweight = 'bold')
     plt.ylim(0, 13)
 
     # For p-value plotting
-    total_error_3P = plot_df.query("Sequence=='"+sequences[1]+"'")['Total Error']
-    total_error_HM = plot_df.query("Sequence=='"+sequences[0]+"'")['Total Error']
+    total_error_3P = plot_df.query(plotBy+"=='"+categories[1]+"'")['Total Error']
+    total_error_HM = plot_df.query(plotBy+"=='"+categories[0]+"'")['Total Error']
     
     t, p_r = stats.ttest_ind(total_error_3P, total_error_HM)
 
@@ -543,7 +543,7 @@ def plot_error_box_plot(plot_df, plot_path, sequences, save=True):
         ax1.text((x1+x2)*.5, y+h, stars, ha='center',
                  va='bottom', color=col, fontsize=32)
 
-    plt.xlabel('Sequence', fontsize = 36)
+    plt.xlabel(plotBy, fontsize = 36)
     plt.minorticks_on()
     plt.tick_params(which = 'minor', bottom=False)
     plt.tick_params(which = 'minor', direction = 'in', color = 'grey')
@@ -557,7 +557,7 @@ def plot_error_box_plot(plot_df, plot_path, sequences, save=True):
         if not os.path.isdir(plot_path + '{}'.format(profile)):
             os.makedirs(plot_path + '{}'.format(profile))
         
-        fig.savefig(plot_path + '{}/box_error_tip.pdf'.format(profile), dpi=600)
+        fig.savefig(plot_path + '{}/box_error_tip_by{}.pdf'.format(profile,plotBy), dpi=600)
 
     plt.show()
     
