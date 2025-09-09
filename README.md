@@ -7,7 +7,7 @@ These experiments were performed at Sunnybrook Research Institute on a 1.5T MRI 
 Details of the setup and experiment can be found in the publication (LINK TO COME).
 
 # How to run the analysis
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/WrightGroupSRI/mr-tracking-analysis/binder-docs?urlpath=%2Fdoc%2Ftree%2FRunAnalysis.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/WrightGroupSRI/mr-tracking-analysis/HEAD?urlpath=%2Fdoc%2Ftree%2FRunAnalysis.ipynb)
 
 The easiest way to run the analysis is through binder, but currently the full pipeline with raw data reconstruction cannot run on binder: the notebook disconnects partway through. **Instead, on binder, you can start running the notebook from the Analysis section.**
 
