@@ -66,9 +66,6 @@ RUN pip install -e get_gt
 RUN git clone https://github.com/WrightGroupSRI/cathy.git cathy
 RUN pip install -e cathy
 
-RUN git clone https://github.com/labonny/zenodo_get.git -b sandbox-fix --single-branch zenodo_get
-RUN pip install -e zenodo_get
-
 COPY <<EOF /home/$MAMBA_USER/.jupyter/jupyter_notebook_config.py
 c = get_config()
 ### If you want to auto-save .html and .py versions of your notebook:
