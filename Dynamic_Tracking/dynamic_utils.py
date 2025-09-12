@@ -500,6 +500,8 @@ def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=
     profile = plot_df['Profile'][0]
     sequence = plot_df['Sequence'][0]
     algorithm = plot_df['Algorithm'][0]
+    # Algorithm names are short except for centroid about peak, so fix this for plot labelling:
+    algo_dict = {'centroid_around_peak':'CAP'}
 
     plot_df[plotBy] = pd.Categorical(plot_df[plotBy], categories=[categories[1], categories[0]], ordered=True)
     # plot_df['Algorithm'] = pd.Categorical(plot_df['Algorithm'], categories=['jpng', 'centroid_around_peak'], ordered=True)
@@ -510,6 +512,10 @@ def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=
 
     ### Uncomment the next 3 lines if you want to generate tip tracking boxplots separated by sequences only, otherwise leave them commented ###
     ax1 = sns.boxplot(x = plot_df[plotBy], y = plot_df['Total Error'], orient = 'v', width = 0.4, showfliers = False, linewidth = 2, palette = "Set2")
+    xtick_labels = ax1.get_xticklabels()
+    # Use the uppercase version of the category or use algo_dict if the name is in there
+    xtick_new_labels = [algo_dict[x.get_text()] if x.get_text() in algo_dict else x.get_text().upper() for x in xtick_labels]
+    ax1.set_xticklabels(xtick_new_labels)
     plt.ylabel('Total Tip Error (mm)', fontsize = 36)
     # plt.ylabel('Total Tip Error (mm)', fontsize = 20, fontweight = 'bold')
     plt.ylim(0, 13)
