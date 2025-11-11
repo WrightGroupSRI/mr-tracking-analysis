@@ -191,8 +191,8 @@ def test_displacements_variances_equal(dists, algo_pairs=[select_algos], p_val=0
         idxs = [0,1]
         if is_dict:
             idxs = [algo_pair[0], algo_pair[1]]
-        res = stats.levene(dists[idxs[0]], dists[idxs[1]])
-        equal_vars.append(res.statistic >= p_val)
+        stat,p = stats.levene(dists[idxs[0]], dists[idxs[1]])
+        equal_vars.append(p >= p_val)
     return equal_vars
 
 def test_displacements_means_diff_ind(dists, algo_pairs=[select_algos], p_val=0.05):
