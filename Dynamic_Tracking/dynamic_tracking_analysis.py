@@ -787,7 +787,7 @@ print("Cardiac Motion Profile: JPNG Tip Error")
 plot_error_box_plot(plot_df_card, box_plot_path, sequences)
 
 
-# In[15]:
+# In[28]:
 
 
 # Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
@@ -799,13 +799,24 @@ hm_plot_df_card = merge_plot_dfs([FH512_2_cap_plot_df_231_card, FH512_2_cap_plot
 print("Respiratory Motion Profile: HM Tip Error by Algorithm")
 plot_error_box_plot(hm_plot_df_resp, box_plot_path, algos, plotBy="Algorithm")
 
-print("Cardiac Motion Profile: HM Tip Error by Algorithm")
+for algo in algos:
+    resp_hm_mean = hm_plot_df_resp[hm_plot_df_resp['Algorithm'] == algo]["Total Error"].mean()
+    resp_hm_std = hm_plot_df_resp[hm_plot_df_resp['Algorithm'] ==  algo]["Total Error"].std()
+    print(f'\tRespiratory tip error for {algo}: {resp_hm_mean:.2f}\u00B1{resp_hm_std:.2f} mm')
+
+print("\n\nCardiac Motion Profile: HM Tip Error by Algorithm")
 plot_error_box_plot(hm_plot_df_card, box_plot_path, algos, plotBy="Algorithm")
 
+for algo in algos:
+    card_hm_mean = hm_plot_df_card[hm_plot_df_card['Algorithm'] == algo]["Total Error"].mean()
+    card_hm_std = hm_plot_df_card[hm_plot_df_card['Algorithm'] ==  algo]["Total Error"].std()
+    print(f'\tCardiac tip error for {algo}: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
 
-# In[16]:
+
+# In[24]:
 
 
+# Note plot_df_resp and plot_df_card collect ONLY the jpng algorithm results
 print('Respiratory Motion: JPNG Tip Error')
 resp_hm_mean = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].mean()
 resp_hm_std = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].std()
