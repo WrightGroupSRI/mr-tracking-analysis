@@ -5,11 +5,11 @@
 # 
 # Data processing and plotting functions are defined in dynamic_utils
 # 
-# Only the JPNG algorithm for this experiment is analysed in the manuscript, but the centroid-around-peak algorithm data is also processed below.
+# JPNG and centroid-around-peak algorithms for this experiment are analysed below, focusing on the Hadamard-multiplexed sequence.
 
 # # Imports
 
-# In[ ]:
+# In[1]:
 
 
 from catheter_utils import geometry
@@ -22,7 +22,7 @@ get_ipython().run_line_magic('matplotlib', 'inline')
 
 # # Constants and Paths
 
-# In[ ]:
+# In[2]:
 
 
 # Main data paths for each catheter (manually input)
@@ -85,7 +85,7 @@ GT_neg5_coords_dfs = [get_gt_coords(GT_filename_neg5[0]), get_gt_coords(GT_filen
 
 # # Constant Numerical Values
 
-# In[ ]:
+# In[3]:
 
 
 num_caths = 3
@@ -131,7 +131,7 @@ start_idx = [ [ {'{}'.format(sequences[0]): 98,
 # 
 # Below, these are saved into arrays for each position and coil. So the home_dist_coords array contains the coordinates of the distal coils of the three catheters at the home position. Each catheter was set up in the scanner in a separate scan session, so these coordinates are different.
 
-# In[ ]:
+# In[4]:
 
 
 # Get ground truth distal coords
@@ -175,7 +175,7 @@ unit_vectors_from_prox_card = np.abs([calc_unit_vector(home_prox_coords[0], pos5
 unit_vectors_from_dist_resp[0][0] = -1 * unit_vectors_from_dist_resp[0][0] # Need to do this for some reason
 
 
-# In[ ]:
+# In[5]:
 
 
 home_dist_coords # home position [x,y,z] coordinates of the distal coil of catheters 231, 299, and 306 respectively
@@ -186,7 +186,7 @@ home_dist_coords # home position [x,y,z] coordinates of the distal coil of cathe
 # 
 # These are converted into data frames for each sequence, catheter, coil, and motion profile for both the JPNG and centroid-around-peak algorithms.
 
-# In[ ]:
+# In[6]:
 
 
 # Convert coil cathcoords to dataframes
@@ -260,7 +260,7 @@ SRI_2_cap_7_306_card = cathcoords_to_DataFrame(main_paths[2], sequences[1], cap,
 # 
 # The distal and proximal coils for each combination (sequence, algorithm, catheter, and motion profile) are used to calculate the tip coordinates using extrapolation.
 
-# In[ ]:
+# In[7]:
 
 
 # Get tip coords from tracked data
@@ -310,7 +310,7 @@ SRI_2_cap_tip_306_card = get_tip_coords(SRI_2_cap_7_306_card, SRI_2_cap_6_306_ca
 # 
 # Expected positions for the catheter coils can be calculated from the ground truth start position, direction of motion, timestamps, and programmed motion profile. These are calculated for the JPNG & centroid-about-peak algorithms for both sequences and motion profiles.
 
-# In[ ]:
+# In[8]:
 
 
 # Get expected coil coords for each sequence
@@ -384,7 +384,7 @@ SRI_2_cap_7_expected_306_card = get_expected_coords_card(SRI_2_cap_7_306_card, s
 # 
 # Tip coordinates are extrapolated for the ground truth data.
 
-# In[ ]:
+# In[9]:
 
 
 # Get GT expected tip coords for each sequence
@@ -434,7 +434,7 @@ SRI_2_cap_tip_expected_306_card = get_tip_coords(SRI_2_cap_7_expected_306_card, 
 # 
 # Tip errors at each timepoint are calculated for each sequence, catheter, and motion profile, for both JPNG and centroid-around-peak algorithms.
 
-# In[ ]:
+# In[10]:
 
 
 # Calculate error for each sequence
@@ -559,7 +559,7 @@ SRI_2_cap_plot_df_306_card.to_hdf(h5out, key="C3P_CAP_cath306_cardiac")
 # 
 # These are not in the manuscript, but can be plotted as shown in the code below: uncomment a line to see the tracked vs expected X, Y, and Z positions over time for that sequence / catheter / coil / motion profile. **Warning**  this is slow
 
-# In[ ]:
+# In[11]:
 
 
 # # Get comparison plots and save them to directory
@@ -659,7 +659,7 @@ SRI_2_cap_plot_df_306_card.to_hdf(h5out, key="C3P_CAP_cath306_cardiac")
 # 
 # The manuscript figures are plotted below - uncomment additional lines to plot other combinations as desired.
 
-# In[ ]:
+# In[18]:
 
 
 # # Plot error lineplots and save them to directory
@@ -674,12 +674,12 @@ SRI_2_cap_plot_df_306_card.to_hdf(h5out, key="C3P_CAP_cath306_cardiac")
 
 # plot_motion_error(FH512_2_jpng_7_299_resp, FH512_2_jpng_7_expected_299_resp,     start_idx[1][0][sequences[0]], comparison_plot_paths[1])
 # plot_motion_error(FH512_2_jpng_6_299_resp, FH512_2_jpng_6_expected_299_resp,     start_idx[1][0][sequences[0]], comparison_plot_paths[1])
-print("HM Sequence: Respiratory Motion Profile Error")
-plot_motion_error(FH512_2_jpng_tip_299_resp, FH512_2_jpng_tip_expected_299_resp, start_idx[1][0][sequences[0]], comparison_plot_paths[1])
+print("HM Sequence: JPNG Respiratory Motion Profile Error")
+plot_motion_error(FH512_2_jpng_tip_299_resp, FH512_2_jpng_tip_expected_299_resp, start_idx[1][0][sequences[0]], comparison_plot_paths[1], suffix='_JPNG')
 # plot_motion_error(FH512_2_jpng_7_299_card, FH512_2_jpng_7_expected_299_card,     start_idx[1][1][sequences[0]], comparison_plot_paths[1])
 # plot_motion_error(FH512_2_jpng_6_299_card, FH512_2_jpng_6_expected_299_card,     start_idx[1][1][sequences[0]], comparison_plot_paths[1])
-print("HM Sequence: Cardiac Motion Profile Error")
-plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card, start_idx[1][1][sequences[0]], comparison_plot_paths[1])
+print("HM Sequence: JPNG Cardiac Motion Profile Error")
+plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card, start_idx[1][1][sequences[0]], comparison_plot_paths[1], suffix='_JPNG')
 
 # plot_motion_error(FH512_2_jpng_7_306_resp, FH512_2_jpng_7_expected_306_resp,     start_idx[2][0][sequences[0]], comparison_plot_paths[2])
 # plot_motion_error(FH512_2_jpng_6_306_resp, FH512_2_jpng_6_expected_306_resp,     start_idx[2][0][sequences[0]], comparison_plot_paths[2])
@@ -696,12 +696,14 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 # plot_motion_error(FH512_2_cap_6_231_card, FH512_2_cap_6_expected_231_card,     start_idx[0][1][sequences[0]], comparison_plot_paths[0])
 # plot_motion_error(FH512_2_cap_tip_231_card, FH512_2_cap_tip_expected_231_card, start_idx[0][1][sequences[0]], comparison_plot_paths[0])
 
+print("HM Sequence: CAP Respiratory Motion Profile Error")
 # plot_motion_error(FH512_2_cap_7_299_resp, FH512_2_cap_7_expected_299_resp,     start_idx[1][0][sequences[0]], comparison_plot_paths[1])
 # plot_motion_error(FH512_2_cap_6_299_resp, FH512_2_cap_6_expected_299_resp,     start_idx[1][0][sequences[0]], comparison_plot_paths[1])
-# plot_motion_error(FH512_2_cap_tip_299_resp, FH512_2_cap_tip_expected_299_resp, start_idx[1][0][sequences[0]], comparison_plot_paths[1])
+plot_motion_error(FH512_2_cap_tip_299_resp, FH512_2_cap_tip_expected_299_resp, start_idx[1][0][sequences[0]], comparison_plot_paths[1], suffix='_CAP')
 # plot_motion_error(FH512_2_cap_7_299_card, FH512_2_cap_7_expected_299_card,     start_idx[1][1][sequences[0]], comparison_plot_paths[1])
 # plot_motion_error(FH512_2_cap_6_299_card, FH512_2_cap_6_expected_299_card,     start_idx[1][1][sequences[0]], comparison_plot_paths[1])
-# plot_motion_error(FH512_2_cap_tip_299_card, FH512_2_cap_tip_expected_299_card, start_idx[1][1][sequences[0]], comparison_plot_paths[1])
+print("HM Sequence: CAP Cardiac Motion Profile Error")
+plot_motion_error(FH512_2_cap_tip_299_card, FH512_2_cap_tip_expected_299_card, start_idx[1][1][sequences[0]], comparison_plot_paths[1], suffix='_CAP')
 
 # plot_motion_error(FH512_2_cap_7_306_resp, FH512_2_cap_7_expected_306_resp,     start_idx[2][0][sequences[0]], comparison_plot_paths[2])
 # plot_motion_error(FH512_2_cap_6_306_resp, FH512_2_cap_6_expected_306_resp,     start_idx[2][0][sequences[0]], comparison_plot_paths[2])
@@ -720,12 +722,12 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 
 # plot_motion_error(SRI_2_jpng_7_299_resp, SRI_2_jpng_7_expected_299_resp,     start_idx[1][0][sequences[1]], comparison_plot_paths[1])
 # plot_motion_error(SRI_2_jpng_6_299_resp, SRI_2_jpng_6_expected_299_resp,     start_idx[1][0][sequences[1]], comparison_plot_paths[1])
-print("3P Sequence: Respiratory Motion Profile Error")
-plot_motion_error(SRI_2_jpng_tip_299_resp, SRI_2_jpng_tip_expected_299_resp, start_idx[1][0][sequences[1]], comparison_plot_paths[1])
+#print("3P Sequence: Respiratory Motion Profile Error")
+#plot_motion_error(SRI_2_jpng_tip_299_resp, SRI_2_jpng_tip_expected_299_resp, start_idx[1][0][sequences[1]], comparison_plot_paths[1])
 # plot_motion_error(SRI_2_jpng_7_299_card, SRI_2_jpng_7_expected_299_card,     start_idx[1][1][sequences[1]], comparison_plot_paths[1])
 # plot_motion_error(SRI_2_jpng_6_299_card, SRI_2_jpng_6_expected_299_card,     start_idx[1][1][sequences[1]], comparison_plot_paths[1])
-print("3P Sequence: Cardiac Motion Profile Error")
-plot_motion_error(SRI_2_jpng_tip_299_card, SRI_2_jpng_tip_expected_299_card, start_idx[1][1][sequences[1]], comparison_plot_paths[1])
+#print("3P Sequence: Cardiac Motion Profile Error")
+#plot_motion_error(SRI_2_jpng_tip_299_card, SRI_2_jpng_tip_expected_299_card, start_idx[1][1][sequences[1]], comparison_plot_paths[1])
 
 # plot_motion_error(SRI_2_jpng_7_306_resp, SRI_2_jpng_7_expected_306_resp,     start_idx[2][0][sequences[1]], comparison_plot_paths[2])
 # plot_motion_error(SRI_2_jpng_6_306_resp, SRI_2_jpng_6_expected_306_resp,     start_idx[2][0][sequences[1]], comparison_plot_paths[2])
@@ -757,7 +759,7 @@ plot_motion_error(SRI_2_jpng_tip_299_card, SRI_2_jpng_tip_expected_299_card, sta
 # plot_motion_error(SRI_2_cap_tip_306_card, SRI_2_cap_tip_expected_306_card, start_idx[2][1][sequences[1]], comparison_plot_paths[2])
 
 
-# In[ ]:
+# In[13]:
 
 
 algo_labels = ['JPNG','CAP']
@@ -770,7 +772,7 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 
 # # Generate Error Boxplots
 
-# In[ ]:
+# In[14]:
 
 
 # Merge data for error boxplots, plot them to compare error across sequences, and save them to directory
@@ -785,7 +787,7 @@ print("Cardiac Motion Profile: JPNG Tip Error")
 plot_error_box_plot(plot_df_card, box_plot_path, sequences)
 
 
-# In[ ]:
+# In[15]:
 
 
 # Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
@@ -801,7 +803,7 @@ print("Cardiac Motion Profile: HM Tip Error by Algorithm")
 plot_error_box_plot(hm_plot_df_card, box_plot_path, algos, plotBy="Algorithm")
 
 
-# In[ ]:
+# In[16]:
 
 
 print('Respiratory Motion: JPNG Tip Error')
@@ -830,7 +832,7 @@ print(f'\t3P: {card_3p_mean:.2f}\u00B1{card_3p_std:.2f} mm')
 # # HDF5 Exports
 # Each of the error dataframes - named according to sequence, algorithm, catheter, and motion profile - has been saved as a group into the dynamic_tracking_tip_errors.h5 file. To examine a particular data frame, use the pandas [read_hdf](https://pandas.pydata.org/docs/reference/api/pandas.read_hdf.html) method as shown below:
 
-# In[ ]:
+# In[17]:
 
 
 pd.read_hdf(h5out, key="C3P_CAP_cath306_cardiac")

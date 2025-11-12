@@ -318,15 +318,16 @@ def plot_tracked_vs_expected(tracked, expected, start_idx, plot_path, save=True)
     return
 
 
-def plot_motion_error(tracked, expected, start_idx, plot_path, save=True, compare_tracked=None, algo_names = []):
+def plot_motion_error(tracked, expected, start_idx, plot_path, save=True, compare_tracked=None, algo_names = [], suffix = ''):
     """ Plot the tracked and expected coordinates vs time"""
     # tracked: dataframe with tracked coords for all coils
     # expected: dataframe of expected motion
     # start_idx: index at which motion starts from 0 position
-    # plot_path: path at which to save plots
-    # save: optionally saves plots to files
+    # plot_path: path at which to save plots, used if save is True
+    # save: optionally saves plots to files, under plot_path in nested subdirectories (profile, sequence, and coil)
     # compare_tracked: a second dataframe with tracked coords for all coils from a different algorithm
     # algo_names: set this to an array of the two algorithm labels if using "compare_tracked"
+    # suffix: added to the output file basename, used if save is True
     
 
     catheter = tracked['Catheter'][0]
@@ -427,9 +428,9 @@ def plot_motion_error(tracked, expected, start_idx, plot_path, save=True, compar
             os.makedirs(plot_path + '{}/{}/{}'.format(profile, sequence, coil))
         
         if (compare_tracked is None):
-            fig1.savefig(plot_path + '{}/{}/{}/motion_error_xyz.pdf'.format(profile, sequence, coil), dpi=600)
+            fig1.savefig(plot_path + '{}/{}/{}/motion_error_xyz{}.pdf'.format(profile, sequence, coil, suffix), dpi=600)
         else:
-            fig1.savefig(plot_path + '{}/{}/{}/compare_motion_error_xyz.pdf'.format(profile, sequence, coil), dpi=600)
+            fig1.savefig(plot_path + '{}/{}/{}/compare_motion_error_xyz{}.pdf'.format(profile, sequence, coil, suffix), dpi=600)
     plt.show()
 
     return
