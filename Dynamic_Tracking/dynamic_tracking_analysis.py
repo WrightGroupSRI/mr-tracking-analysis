@@ -659,7 +659,7 @@ SRI_2_cap_plot_df_306_card.to_hdf(h5out, key="C3P_CAP_cath306_cardiac")
 # 
 # The manuscript figures are plotted below - uncomment additional lines to plot other combinations as desired.
 
-# In[18]:
+# In[12]:
 
 
 # # Plot error lineplots and save them to directory
@@ -772,7 +772,7 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 
 # # Generate Error Boxplots
 
-# In[14]:
+# In[19]:
 
 
 # Merge data for error boxplots, plot them to compare error across sequences, and save them to directory
@@ -781,13 +781,45 @@ plot_df_resp = merge_plot_dfs([SRI_2_jpng_plot_df_231_resp, SRI_2_jpng_plot_df_2
 plot_df_card = merge_plot_dfs([SRI_2_jpng_plot_df_231_card, SRI_2_jpng_plot_df_299_card, SRI_2_jpng_plot_df_306_card, FH512_2_jpng_plot_df_231_card, FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
 
 print("Respiratory Motion Profile: JPNG Tip Error")
-plot_error_box_plot(plot_df_resp, box_plot_path, sequences)
+plot_error_box_plot(plot_df_resp, box_plot_path, sequences, equal_variance=False, alternative='less')
 
 print("Cardiac Motion Profile: JPNG Tip Error")
-plot_error_box_plot(plot_df_card, box_plot_path, sequences)
+plot_error_box_plot(plot_df_card, box_plot_path, sequences, equal_variance=False, alternative='less')
 
 
 # In[28]:
+
+
+w_presp, p_presp = stats.shapiro(plot_df_resp[plot_df_resp.Sequence=='3P']['Total Error'])
+w_pcard, p_pcard = stats.shapiro(plot_df_card[plot_df_card.Sequence=='3P']['Total Error'])
+
+w_hresp, p_hresp = stats.shapiro(plot_df_resp[plot_df_resp.Sequence=='HM']['Total Error'])
+w_hcard, p_hcard = stats.shapiro(plot_df_card[plot_df_card.Sequence=='HM']['Total Error'])
+
+print('Shapiro-Wilk normality test scores for sequence data merging different catheters:')
+print(f"3P\n\tresp w={w_presp}, p={p_presp}\n\tcard w={w_pcard}, p={p_pcard}")
+print(f"HM\n\tresp w={w_hresp}, p={p_hresp}\n\tcard w={w_hcard}, p={p_hcard}")
+
+
+# In[33]:
+
+
+sns.histplot(plot_df_resp[plot_df_resp.Sequence=='3P'],x='Total Error', hue='Catheter')
+
+
+# In[34]:
+
+
+sns.histplot(plot_df_card[plot_df_card.Sequence=='HM'], x='Total Error', hue='Catheter')
+
+
+# In[32]:
+
+
+plot_df_card.head()
+
+
+# In[15]:
 
 
 # Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
@@ -797,7 +829,7 @@ hm_plot_df_resp = merge_plot_dfs([FH512_2_cap_plot_df_231_resp, FH512_2_cap_plot
 hm_plot_df_card = merge_plot_dfs([FH512_2_cap_plot_df_231_card, FH512_2_cap_plot_df_299_card,                                   FH512_2_cap_plot_df_306_card, FH512_2_jpng_plot_df_231_card,                                   FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
 
 print("Respiratory Motion Profile: HM Tip Error by Algorithm")
-plot_error_box_plot(hm_plot_df_resp, box_plot_path, algos, plotBy="Algorithm")
+plot_error_box_plot(hm_plot_df_resp, box_plot_path, algos, plotBy="Algorithm", independent=False, equal_variance=False)
 
 for algo in algos:
     resp_hm_mean = hm_plot_df_resp[hm_plot_df_resp['Algorithm'] == algo]["Total Error"].mean()
@@ -813,7 +845,33 @@ for algo in algos:
     print(f'\tCardiac tip error for {algo}: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
 
 
-# In[24]:
+# In[38]:
+
+
+w_jresp, p_jresp = stats.shapiro(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng]['Total Error'])
+w_jcard, p_jcard = stats.shapiro(hm_plot_df_card[hm_plot_df_card.Algorithm==jpng]['Total Error'])
+
+w_cresp, p_cresp = stats.shapiro(hm_plot_df_resp[hm_plot_df_resp.Algorithm==cap]['Total Error'])
+w_ccard, p_ccard = stats.shapiro(hm_plot_df_card[hm_plot_df_card.Algorithm==cap]['Total Error'])
+
+print('Shapiro-Wilk normality test scores for HM-only algorithm data merging different catheters:')
+print(f"JPNG\n\tresp w={w_jresp}, p={p_jresp}\n\tcard w={w_jcard}, p={p_jcard}")
+print(f"CAP\n\tresp w={w_cresp}, p={p_cresp}\n\tcard w={w_ccard}, p={p_ccard}")
+
+
+# In[37]:
+
+
+sns.histplot(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng],x='Total Error', hue='Catheter')
+
+
+# In[39]:
+
+
+sns.histplot(hm_plot_df_card[hm_plot_df_card.Algorithm==cap],x='Total Error', hue='Catheter')
+
+
+# In[16]:
 
 
 # Note plot_df_resp and plot_df_card collect ONLY the jpng algorithm results
