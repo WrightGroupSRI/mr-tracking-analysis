@@ -494,8 +494,20 @@ def pval_to_stars(pval):
     else:
         return ''
 
-def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=True):
-    """Plots boxplot with plot_df being the dataframe with the sequence, coil, and total error info"""
+def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=True, independent=True, equal_variance=True, alternative='two-sided'):
+    """Plots boxplot with plot_df being the dataframe with the sequence, coil, and total error info
+
+    Statistical comparison with a t-test is run and a star bar is drawn in case of significance
+    
+    plot_df: data frame containing the values
+    plot_path: directory for saving plot files, used if save is True
+    categories: list of 2 categories in the plotBy column. Each will get a box
+    plotBy: which column to use to plot by on the X axis (Sequence / Algorithm)
+    save: True to save plots to files, False otherwise
+    independent: True if the samples are independent in which case the independent t-test is run, False if they are related in which case the paired t-test will be used
+    equal_variance: True if variances are known to be equal in which case the standard independent t-test is run, otherwise Welch's t-test is used: ignored if independent is False
+    alternative: 'two-sided', 'less', or 'greater' to indicate a two-tailed or one-tailed test. less & greater will both do one-tailed tests, using the categories order
+    """
     
     catheter = plot_df['Catheter'][0]
     profile = plot_df['Profile'][0]
@@ -524,9 +536,19 @@ def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=
     # For p-value plotting
     total_error_3P = plot_df.query(plotBy+"=='"+categories[1]+"'")['Total Error']
     total_error_HM = plot_df.query(plotBy+"=='"+categories[0]+"'")['Total Error']
+    t = p_r = 0
     
-    t, p_r = stats.ttest_ind(total_error_3P, total_error_HM)
-
+    # scipy 1.4 t-test implementations don't have one-tailed versions: can halve the p-value to get the one-tailed result
+    if independent:
+        t, p_r = stats.ttest_ind(total_error_HM, total_error_3P, equal_var=equal_variance)
+    else:
+        t, p_r = stats.ttest_rel(total_error_HM, total_error_3P)
+    
+    if alternative != 'two-sided':
+        p_r = p_r * 0.5
+        if (alternative == 'greater' and t < 0) or (alternative == 'less' and t > 0):
+            p_r = 1-p_r
+        
     # Calculate the maximum whisker height for 3P
     Q1 = np.percentile(total_error_3P, 25)
     Q3 = np.percentile(total_error_3P, 75)
