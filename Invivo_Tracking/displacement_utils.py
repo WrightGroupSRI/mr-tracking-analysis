@@ -92,7 +92,7 @@ def plot_displacement_diff(x_values, displacements, algo_1, algo_2):
     plt.ylabel(plot_label + ' (mm)')
     return plt
 
-def plot_displacement_boxplot(displacements, selected_algos = select_algos, show_scatter = True, y_label="Distances from centroid (mm)", set_ymax=15, p_value=0.05, plot=plt):
+def plot_displacement_boxplot(displacements, selected_algos = select_algos, show_scatter = True, y_label="Distances from centroid (mm)", set_ymax=15, p_value=0.05, plot=plt, alternative='two-sided'):
     """ Show boxplots comparing displacements from different algorithms
     Runs paired t test / Wilcoxon signed rank test if only two algorithms are passed in
     Returns the plot and which statistical test was used (if two algorithms were passed in)
@@ -123,7 +123,7 @@ def plot_displacement_boxplot(displacements, selected_algos = select_algos, show
             plot.plot(x, y, 'r.', alpha=0.4)
     if (len(selected_algos) == 2):
         # check for sig diff
-        diff_arr, stat_test, p = test_displacements_means_diff_paired(displacements, [selected_algos], p_value, quiet=True)
+        diff_arr, stat_test, p = test_displacements_means_diff_paired(displacements, [selected_algos], p_value, quiet=True, alternative=alternative)
         if diff_arr[0] != 0: # reject equal means null hypoth
             # draw a line: using max_y can be too high if there are cropped outliers
             starline_y = max_y
@@ -225,7 +225,7 @@ def test_displacements_means_diff_ind(dists, algo_pairs=[select_algos], p_val=0.
             diff_means.append(np.sign(diff))
     return diff_means
 
-def test_displacements_means_diff_paired(dists, algo_pairs=[select_algos], p_val=0.05, quiet=False):
+def test_displacements_means_diff_paired(dists, algo_pairs=[select_algos], p_val=0.05, quiet=False, alternative='two-sided'):
     """Tests if the displacements of the given pairs of algorithms are different
     Uses
       - two-sided paired sample test if both sets are normal (tested using
@@ -252,14 +252,17 @@ def test_displacements_means_diff_paired(dists, algo_pairs=[select_algos], p_val
         _, norm_p1 = stats.shapiro(dists[idxs[1]])
         if (norm_p0 >= p_val and norm_p1 >= p_val):
             # Normal: use ttest_rel
-            selected_test = 'Paired-t'
+            selected_test = 'Paired-t ' +  (alternative if alternative == 'two-sided' else 'one-tailed')
             diff,p = stats.ttest_rel(dists[idxs[0]],dists[idxs[1]])
+            if alternative != 'two-sided':
+                p = p * 0.5
+            if (alternative == 'greater' and diff < 0) or (alternative == 'less' and diff > 0):
+                p = 1-p
         else: # Nonparametric Wilcoxon signed rank test
-            selected_test = 'Wilcoxon'
+            selected_test = 'Wilcoxon ' +  (alternative if alternative == 'two-sided' else 'one-tailed')
             diffs = dists[idxs[0]] - dists[idxs[1]]
-            res = stats.wilcoxon(x=dists[idxs[0]],y=dists[idxs[1]])
+            w, p = stats.wilcoxon(x=dists[idxs[0]],y=dists[idxs[1]],alternative=alternative)
             diff = np.mean(diffs)
-            p = res.pvalue
         if not quiet:
             print(f'{selected_test} p: {p}')
 

@@ -349,9 +349,9 @@ def displacement_box_plot(experiment_name, description, displacements, algos=dis
     plot = None
     stat_test = None
     if axis is None:
-        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos)
+        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos, alternative='greater')
     else:
-        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos, plot=axis)
+        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos, plot=axis, alternative='greater')
     title = experiment_name + ': ' + description
     if axis is None:
         plot.title(title)
@@ -381,7 +381,7 @@ plt.savefig(figure_path + '/distancesToCentroid.png')
 plt.show()
 
 for t in stat_tests:
-    print(f'{t}, ',end='')
+    print(f'{t}\t',end='')
 
 
 # In[41]:
@@ -400,7 +400,7 @@ def get_diff_stats_cols(df, p_value=0.05):
     """
     diff_col, test_name_col, p_value_col, p_star_col = [], [], [], []
     for _, row in df.iterrows():
-        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired(row['displacements'],                                                                                          p_val=p_value, quiet=True)
+        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired(row['displacements'],                                                                                          p_val=p_value, quiet=True, alternative='greater')
         diff_col.append(diff_arr[0])
         test_name_col.append(test_name)
         p_value_col.append(p)
@@ -668,10 +668,10 @@ def delta_plot_refactor(experiment_name, description, deltas, algos, show_scatte
     stat_test = None
     if axis is None:
         plot,stat_test = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
-                                                       set_ymax=None)
+                                                       set_ymax=None, alternative='greater')
     else:
         plot,stat_test = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
-                                                       set_ymax=None, plot=axis)
+                                                       set_ymax=None, plot=axis, alternative='greater')
     title = experiment_name + ': ' + description + ' successive distances'
     if axis is None:
         plot.title(title)
@@ -711,7 +711,7 @@ plt.show()
 
 
 for t in stat_tests:
-    print(f'{t}, ',end='')
+    print(f'{t}\t',end='')
 
 
 # Store statistics on successive tip distances
@@ -746,7 +746,7 @@ def get_delta_diff_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng
     """
     diff_col, test_name_col, p_value_col, p_star_col = [], [], [], []
     for _, row in df.iterrows():
-        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired([row[col1],                                                                                          row[col2]], p_val=p_value,                                                                                        quiet=True)
+        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired([row[col1],                                                                                          row[col2]], p_val=p_value,                                                                                        quiet=True, alternative='greater')
         diff_col.append(diff_arr[0])
         test_name_col.append(test_name)
         p_value_col.append(p)
@@ -882,9 +882,9 @@ def orientation_box_plot(experiment_name, description, orientations, axis=None):
     plot = None
     stat_test = None
     if axis is None:
-        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, alternative='greater')
     else:
-        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis, alternative='greater')
     title = 'Tip delta orientation ' + experiment_name + ': ' + description
     if axis is None:
         plot.title(title)
@@ -916,7 +916,7 @@ plt.show()
 
 
 for t in stat_tests:
-    print(f'{t}, ',end='')
+    print(f'{t}\t',end='')
 
 
 # In[100]:
@@ -958,7 +958,7 @@ def get_delta_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng_delt
     """
     diff_col, test_name_col, p_value_col, p_star_col = [], [], [], []
     for _, row in df.iterrows():
-        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired([row[col1],                                                                                          row[col2]], p_val=p_value,                                                                                         quiet=True)
+        diff_arr, test_name, p = displacement_utils.test_displacements_means_diff_paired([row[col1],                                                                                          row[col2]], p_val=p_value,                                                                                         quiet=True, alternative='greater')
         diff_col.append(diff_arr[0])
         test_name_col.append(test_name)
         p_value_col.append(p)
@@ -1124,9 +1124,9 @@ def tip_tilt_box_plot(experiment_name, description, orientations, axis=None):
     plot = None
     stat_test = None
     if axis is None:
-        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, alternative='greater')
     else:
-        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis, alternative='greater')
     title = 'Tip tilt from mean ' + experiment_name + ': ' + description
     if axis is None:
         plot.title(title)       
@@ -1158,7 +1158,7 @@ plt.show()
 
 
 for t in stat_tests:
-    print(f'{t}, ',end='')
+    print(f'{t}\t',end='')
 
 
 # In[125]:
