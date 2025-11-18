@@ -11,7 +11,7 @@
 # - the distances between successive tip locations
 # - the angles between successive catheter tip orientations
 
-# In[7]:
+# In[1]:
 
 
 import displacement_utils
@@ -27,27 +27,27 @@ from collections import OrderedDict
 import os
 
 
-# In[8]:
+# In[2]:
 
 
 from itertools import chain
 
 
-# In[9]:
+# In[3]:
 
 
 import warnings
 warnings.filterwarnings('ignore',category=pd.io.pytables.PerformanceWarning)
 
 
-# In[10]:
+# In[4]:
 
 
 plt.rcParams['figure.figsize'] = [20, 15]
 pd.options.display.max_columns = None
 
 
-# In[11]:
+# In[5]:
 
 
 # Localization algorithms of interest
@@ -55,7 +55,7 @@ sel_algos = displacement_utils.select_algos
 shorten = {'centroid_around_peak':'cap','jpng':'jpng'}
 
 
-# In[12]:
+# In[6]:
 
 
 export_path = '../reports/export/invivo'
@@ -68,26 +68,26 @@ Path(figure_path).mkdir(parents=True,exist_ok=True)
 # # Read in tracked locations from both experiments
 # This assumes the raw projection data has already been reconstructed and the tracking coils have been localized using the peak-finding algorithms: this can be done using the top-level notebook with output stored in a directory named "processed". If this directory is not found, preprocessed coordinates (stored in a directory named "preprocessed") are used. The coordinates have been saved to text files.
 
-# In[13]:
+# In[7]:
 
 
 ablationsDF = pd.read_csv('experiment_recordings.csv')
 
 
-# In[14]:
+# In[8]:
 
 
 ablationsDF['Experiment Name'] = ablationsDF.apply(lambda x: Path(x['Input']).parts[-2].replace('_',' '), axis=1)
 ablationsDF['Description'] = ablationsDF.apply(lambda x: Path(x['Input']).parts[-1].replace('_',' '), axis=1)
 
 
-# In[15]:
+# In[9]:
 
 
 experiments = ablationsDF['Experiment Name'].unique()
 
 
-# In[16]:
+# In[10]:
 
 
 prepend = '/data/'
@@ -97,7 +97,7 @@ if not os.path.isdir(prepend+'processed'):
     preprocessed = True
 
 
-# In[17]:
+# In[11]:
 
 
 def get_cathcoords_path(folder, coil_index):
@@ -108,7 +108,7 @@ def get_cathcoords_path(folder, coil_index):
         return None
 
 
-# In[18]:
+# In[12]:
 
 
 def get_processed_path(raw_path,prepend,preprocessed=False):
@@ -116,7 +116,7 @@ def get_processed_path(raw_path,prepend,preprocessed=False):
     return (prepend + raw_path + '/').replace('raw',proc_string)
 
 
-# In[19]:
+# In[13]:
 
 
 def get_recording_index(folder):
@@ -128,13 +128,13 @@ def get_recording_index(folder):
         return None
 
 
-# In[20]:
+# In[14]:
 
 
 ablationsDF['Coord_folder'] = ablationsDF.apply(lambda x: get_processed_path(x['Input'],prepend,preprocessed),axis=1)
 
 
-# In[21]:
+# In[15]:
 
 
 ablationsDF['Recording_index'] = ablationsDF.apply(lambda x: get_recording_index(x['Coord_folder']),axis=1)
@@ -142,7 +142,7 @@ ablationsDF['Recording_index'] = ablationsDF.apply(lambda x: get_recording_index
 
 # # Distances from the centroid: Centroid-about-peak vs JPNG
 
-# In[22]:
+# In[16]:
 
 
 ablationsDF[['coords','fits','displacements','centroids']] = ablationsDF.apply(lambda x: 
@@ -153,25 +153,25 @@ ablationsDF[['coords','fits','displacements','centroids']] = ablationsDF.apply(l
                                                                                axis=1, result_type='expand' )
 
 
-# In[23]:
+# In[17]:
 
 
 ablationsDF['msecs'] = ablationsDF.apply(lambda x: displacement_utils.getMsecsSinceStart(x['coords'][displacement_utils.select_algos[0]][0]), axis=1)
 
 
-# In[24]:
+# In[18]:
 
 
 stats_cols = []
 
 
-# In[25]:
+# In[19]:
 
 
 summary_stat_cols = []
 
 
-# In[26]:
+# In[20]:
 
 
 for algo in displacement_utils.select_algos:
@@ -179,7 +179,7 @@ for algo in displacement_utils.select_algos:
     ablationsDF[colName] = ablationsDF.apply(lambda x: x['fits'][algo].tip,axis=1)
 
 
-# In[27]:
+# In[21]:
 
 
 for algo in displacement_utils.select_algos:
@@ -187,7 +187,7 @@ for algo in displacement_utils.select_algos:
     ablationsDF[colName] = ablationsDF.apply(lambda x: x['displacements'][algo],axis=1)
 
 
-# In[28]:
+# In[22]:
 
 
 for algo in displacement_utils.select_algos:
@@ -196,7 +196,7 @@ for algo in displacement_utils.select_algos:
     ablationsDF[colName] = ablationsDF.apply(lambda x: np.mean(x['displacements_' + algo]),axis=1)
 
 
-# In[29]:
+# In[23]:
 
 
 for algo in displacement_utils.select_algos:
@@ -207,7 +207,7 @@ for algo in displacement_utils.select_algos:
     summary_stat_cols.append(colName)
 
 
-# In[30]:
+# In[24]:
 
 
 for algo in displacement_utils.select_algos:
@@ -219,7 +219,7 @@ for algo in displacement_utils.select_algos:
     ablationsDF[colName] = ablationsDF.apply(lambda x: np.std(x['displacements_' + algo], ddof=1),axis=1)
 
 
-# In[31]:
+# In[25]:
 
 
 for algo in displacement_utils.select_algos:
@@ -228,7 +228,7 @@ for algo in displacement_utils.select_algos:
     ablationsDF[colName] = ablationsDF.apply(lambda x: np.subtract(*np.percentile(x['displacements_' + algo], [75, 25])),axis=1)
 
 
-# In[32]:
+# In[26]:
 
 
 # interquartile range
@@ -243,45 +243,45 @@ for algo in displacement_utils.select_algos:
                                                         axis=1)
 
 
-# In[33]:
+# In[27]:
 
 
 ablDF = ablationsDF.drop(['coords','fits'],axis=1)
 
 
-# In[34]:
+# In[28]:
 
 
 sel_algos = displacement_utils.select_algos
 
 
-# In[35]:
+# In[29]:
 
 
 ablationsDF['count'] = ablationsDF.apply(lambda x: len(x['displacements'][sel_algos[0]]), axis=1)
 stats_cols.append('count')
 
 
-# In[36]:
+# In[30]:
 
 
 for algo in sel_algos:
     ablationsDF[algo+'_tipCoords'] = ablationsDF.apply(lambda x: x['fits'][algo].tip, axis=1)
 
 
-# In[37]:
+# In[31]:
 
 
 ablationsDF = ablationsDF.drop(['fits'],axis=1)
 
 
-# In[38]:
+# In[32]:
 
 
 ablationsDF.to_hdf(export_path + '/ablationAllCoordsDF.hdf5',key='ablCoords')
 
 
-# In[39]:
+# In[33]:
 
 
 def displacement_plot(experiment_name, description, msecs, displacements, show=False):
@@ -297,13 +297,13 @@ def displacement_plot(experiment_name, description, msecs, displacements, show=F
 
 # These plot the distance to centroid over the lengths of the recordings, one plot for each recording. These are saved to files: to see them inline, set ``show=True`` in the displacement_plot call below.
 
-# In[40]:
+# In[34]:
 
 
 out = ablDF.apply(lambda x: displacement_plot(x['Experiment Name'], x['Description'], x['msecs'],                                              x['displacements'], show=False),axis=1)
 
 
-# In[41]:
+# In[35]:
 
 
 def print_disp_stats(experiment_name, description, displacements):
@@ -313,7 +313,7 @@ def print_disp_stats(experiment_name, description, displacements):
 
 # ## Additional plots and tables for distances from the centroid
 
-# In[42]:
+# In[36]:
 
 
 abl_df = ablDF.rename(columns={'Experiment Name':'expmt'})
@@ -328,29 +328,30 @@ for row in abl_df.itertuples():
         subj_recording[subject] = [description]
 
 
-# In[43]:
+# In[37]:
 
 
 abl_df['Subject'] = abl_df.apply(lambda x: list(subj_recording.keys()).index(x['expmt']), axis=1)
 ablDF['Subject'] = ablDF.apply(lambda x: list(subj_recording.keys()).index(x['Experiment Name']), axis=1)
 
 
-# In[44]:
+# In[38]:
 
 
 abl_df['Recording'] = abl_df.apply(lambda x: subj_recording[x['expmt']].index(x['Description']), axis=1)
 ablDF['Recording'] = ablDF.apply(lambda x: subj_recording[x['Experiment Name']].index(x['Description']), axis=1)
 
 
-# In[45]:
+# In[39]:
 
 
 def displacement_box_plot(experiment_name, description, displacements, algos=displacement_utils.select_algos, axis=None):
     plot = None
+    stat_test = None
     if axis is None:
-        plot = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos)
+        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos)
     else:
-        plot = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos, plot=axis)
+        plot, stat_test = displacement_utils.plot_displacement_boxplot(displacements, selected_algos = algos, plot=axis)
     title = experiment_name + ': ' + description
     if axis is None:
         plot.title(title)
@@ -358,17 +359,20 @@ def displacement_box_plot(experiment_name, description, displacements, algos=dis
         plot.show()
     else:
         axis.set_title(title)
+    return stat_test
 
 
-# In[46]:
+# In[40]:
 
 
 fig, axes = plt.subplots(ncols=4, nrows=3, figsize=(20, 15))
 ax_list = list(chain.from_iterable(zip(*axes))) # single iterable list for 2d array
 to_plot_df = abl_df[['Subject','Recording','displacements']]
+stat_tests = []
 
 for idx,row in enumerate(to_plot_df.itertuples()):
-    displacement_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.displacements, axis=ax_list[idx])
+    test = displacement_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.displacements, axis=ax_list[idx])
+    stat_tests.append(test)
 
 plt.tight_layout()
 fig.subplots_adjust(top=0.88)
@@ -376,14 +380,17 @@ fig.suptitle("Distance to centroid: CAP vs JPNG", fontsize=16)
 plt.savefig(figure_path + '/distancesToCentroid.png')
 plt.show()
 
+for t in stat_tests:
+    print(f'{t}, ',end='')
 
-# In[47]:
+
+# In[41]:
 
 
 diff_stats_cols = ['CAP>JPNG','Test name','p','Sig']
 
 
-# In[48]:
+# In[42]:
 
 
 def get_diff_stats_cols(df, p_value=0.05):
@@ -401,26 +408,26 @@ def get_diff_stats_cols(df, p_value=0.05):
     return pd.Series({'CAP>JPNG':diff_col, 'Test name':test_name_col, 'p':p_value_col, 'Sig':p_star_col})
 
 
-# In[49]:
+# In[43]:
 
 
 series = get_diff_stats_cols(ablDF)
 
 
-# In[50]:
+# In[44]:
 
 
 for col in diff_stats_cols:
     ablDF[col] = series[col]
 
 
-# In[51]:
+# In[45]:
 
 
 stats_cols = stats_cols + diff_stats_cols
 
 
-# In[52]:
+# In[46]:
 
 
 summary_stat_cols = summary_stat_cols + diff_stats_cols
@@ -429,7 +436,7 @@ summary_stat_cols = summary_stat_cols + diff_stats_cols
 # ## frequency of distances to centroid > 5 mm
 # We can look at how often the distances to the centroid exceed 5 mm
 
-# In[53]:
+# In[47]:
 
 
 def disp_above(experiment_name, description, displacements,threshold=5):
@@ -437,7 +444,7 @@ def disp_above(experiment_name, description, displacements,threshold=5):
     return above
 
 
-# In[54]:
+# In[48]:
 
 
 ablDF['displacements_above_5'] = ablDF.apply(lambda x: disp_above(x['Experiment Name'], x['Description'], x['displacements'],5),axis=1)
@@ -445,43 +452,43 @@ ablDF['displacements_above_5'] = ablDF.apply(lambda x: disp_above(x['Experiment 
 
 # To get a total number of displacements over the threshold for the algorithm, it would be easier to have these counts stored in separate columns (rather than in dicts / tuples that can't be summed easily with pandas)
 
-# In[55]:
+# In[49]:
 
 
 sel_algos = displacement_utils.select_algos
 
 
-# In[56]:
+# In[50]:
 
 
 ablDF['count'] = ablDF.apply(lambda x: len(x['displacements'][sel_algos[0]]), axis=1)
 
 
-# In[57]:
+# In[51]:
 
 
 x = ablDF.apply(lambda x: x['displacements_above_5'][sel_algos[0]][0], axis=1)
 
 
-# In[58]:
+# In[52]:
 
 
 frame = {'count':ablDF['count']} # Count up the samples in each recording
 
 
-# In[59]:
+# In[53]:
 
 
 freq_disp_DF = pd.DataFrame(frame)
 
 
-# In[60]:
+# In[54]:
 
 
 disp_suffix = '_disp_gt_5'
 
 
-# In[61]:
+# In[55]:
 
 
 for algos in sel_algos:
@@ -489,7 +496,7 @@ for algos in sel_algos:
     freq_disp_DF = pd.concat([freq_disp_DF,freqs.rename(algos+disp_suffix)],axis=1)
 
 
-# In[62]:
+# In[56]:
 
 
 print('Frequency of displacements over 5 mm over all considered ablation recordings:')
@@ -499,7 +506,7 @@ for algo in sel_algos:
 
 # ## Compare variances
 
-# In[63]:
+# In[57]:
 
 
 def get_equal_variance(experiment_name, description, displacements, algos):
@@ -508,32 +515,32 @@ def get_equal_variance(experiment_name, description, displacements, algos):
     
 
 
-# In[64]:
+# In[58]:
 
 
 ablDF['cap_jpng_equal_var'] = ablDF.apply(lambda x: displacement_utils.test_displacements_variances_equal(x['displacements'], 
                                                            [sel_algos]),axis=1)
 
 
-# In[65]:
+# In[59]:
 
 
 cols_disp = ['Experiment Name','Description'] + stats_cols + ['cap_jpng_equal_var']
 
 
-# In[66]:
+# In[60]:
 
 
 ablDF.to_csv(export_path+'/ablLocs_stats.csv', columns=cols_disp,index=False)
 
 
-# In[67]:
+# In[61]:
 
 
 summary_disp = ['Subject','Recording'] + summary_stat_cols
 
 
-# In[68]:
+# In[62]:
 
 
 abl_df = ablDF[summary_disp].rename(columns={'mean_dist_centroid_around_peak':'CAP mean', 'std_centroid_around_peak':'CAP std',                              'mean_dist_jpng':'JPNG mean', 'std_jpng':'JPNG std'})
@@ -543,57 +550,57 @@ abl_df.to_csv(export_path+'/distance_to_centroid_stats.csv', float_format='%.2g'
 # ## format results csv for latex import
 # The stats csv table has spaces in column names and unnecessary information that can be omitted or abbreviated. Experiment names and descriptions can be represented with numbers, standard deviations can be placed into the same column as the means (with a plus-minus symbol separating them), etc.
 
-# In[69]:
+# In[63]:
 
 
 subj = list(subj_recording.keys())
 
 
-# In[70]:
+# In[64]:
 
 
 abl_df = abl_df.rename(columns={'Experiment Name':'expmt','Test name':'Test', 'CAP mean':'cap_mean',                                'CAP std':'cap_std', 'JPNG mean':'jpng_mean',                                 'JPNG std':'jpng_std'}) # Get rid of spaces
 
 
-# In[71]:
+# In[65]:
 
 
 abl_df_brief = abl_df[['Subject','Recording','cap_mean', 'cap_std', 'jpng_mean','jpng_std', 'CAP>JPNG', 'Test', 'p',                      'Sig']]
 
 
-# In[72]:
+# In[66]:
 
 
 print('Distance to Centroid statistics: CAP and JPNG')
 display(abl_df_brief)
 
 
-# In[73]:
+# In[67]:
 
 
 abl_df_brief=abl_df_brief.rename(columns={'CAP>JPNG':'cap_gt_jpng'})
 
 
-# In[74]:
+# In[68]:
 
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
 
 
-# In[75]:
+# In[69]:
 
 
 for col in to_round:
     abl_df_brief[col] = abl_df_brief[col].map('{:,.2f}'.format)
 
 
-# In[76]:
+# In[70]:
 
 
 abl_df_brief['CAP'] = abl_df_brief.apply(lambda x: str(x['cap_mean']) + r'\pm' + str(x['cap_std']),axis=1)
 
 
-# In[77]:
+# In[71]:
 
 
 abl_df_brief['JPNG'] = abl_df_brief.apply(lambda x: str(x['jpng_mean']) + r'\pm' + str(x['jpng_std']),axis=1)
@@ -601,7 +608,7 @@ abl_df_brief['JPNG'] = abl_df_brief.apply(lambda x: str(x['jpng_mean']) + r'\pm'
 
 # Put a bold signifier (\textbf) around the mean if the difference is significant. Note we encode these as raw strings to avoid the this being interpreted as a "tab".
 
-# In[78]:
+# In[72]:
 
 
 for idx,row in abl_df_brief.iterrows():
@@ -617,19 +624,19 @@ for idx,row in abl_df_brief.iterrows():
         abl_df_brief.loc[idx,'CAP'] = r'\textbf{' + expr[0:pm] + r'}' + expr[pm:]
 
 
-# In[79]:
+# In[73]:
 
 
 abl_df_brief.drop(columns=['cap_mean','cap_std','jpng_mean','jpng_std','cap_gt_jpng'],inplace=True)
 
 
-# In[80]:
+# In[74]:
 
 
 abl_df_tex = abl_df_brief[['Subject','Recording','CAP','JPNG','Test','p','Sig']]
 
 
-# In[81]:
+# In[75]:
 
 
 abl_df_tex.to_csv(export_path+'/distance_to_centroid_tex.csv', encoding='ascii',float_format='%.2g',index=False)
@@ -638,13 +645,13 @@ abl_df_tex.to_csv(export_path+'/distance_to_centroid_tex.csv', encoding='ascii',
 # # Look at successive tip distances
 # Tip-to-tip distances are expected to be small as they are sampled around every 30 ms for the HM sequence. Large jumps may indicate an issue with the signal or the algorithm.
 
-# In[82]:
+# In[76]:
 
 
 ablCoordsDF = ablationsDF
 
 
-# In[83]:
+# In[77]:
 
 
 for algo in sel_algos:
@@ -653,16 +660,17 @@ for algo in sel_algos:
                                                     axis=1)
 
 
-# In[84]:
+# In[78]:
 
 
 def delta_plot_refactor(experiment_name, description, deltas, algos, show_scatter=True, axis=None):
     plot = None
+    stat_test = None
     if axis is None:
-        plot = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
                                                        set_ymax=None)
     else:
-        plot = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(deltas, algos, show_scatter, y_label='Distance (mm)',
                                                        set_ymax=None, plot=axis)
     title = experiment_name + ': ' + description + ' successive distances'
     if axis is None:
@@ -671,26 +679,29 @@ def delta_plot_refactor(experiment_name, description, deltas, algos, show_scatte
         plot.show()
     else:
         axis.set_title(title)
+    return stat_test
 
 
-# In[85]:
+# In[79]:
 
 
 ablCoordsDF['Subject'] = ablCoordsDF.apply(lambda x: list(subj_recording.keys()).index(x['Experiment Name']), axis=1)
 ablCoordsDF['Recording'] = ablCoordsDF.apply(lambda x: subj_recording[x['Experiment Name']].index(x['Description']), axis=1)
 
 
-# In[86]:
+# In[80]:
 
 
 fig, axes = plt.subplots(ncols=4, nrows=3, figsize=(20, 15))
 ax_list = list(chain.from_iterable(zip(*axes))) # single iterable list for 2d array
 delta_cols =  [algo+'_deltas' for algo in sel_algos]
 to_plot_df = ablCoordsDF[['Subject','Recording'] + delta_cols]
+stat_tests = []
 
 for idx,row in enumerate(to_plot_df.itertuples()):
     delta_arrs = [getattr(row,delta_cols[0]),getattr(row,delta_cols[1])]
-    delta_plot_refactor('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), delta_arrs, algos=sel_algos,                        axis=ax_list[idx])
+    test = delta_plot_refactor('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), delta_arrs, algos=sel_algos,                        axis=ax_list[idx])
+    stat_tests.append(test)
 
 plt.tight_layout()
 fig.subplots_adjust(top=0.88)
@@ -699,9 +710,13 @@ plt.savefig(figure_path+'/successiveDistances-boxPlots.png')
 plt.show()
 
 
+for t in stat_tests:
+    print(f'{t}, ',end='')
+
+
 # Store statistics on successive tip distances
 
-# In[87]:
+# In[81]:
 
 
 summary_stats_cols = []
@@ -715,13 +730,13 @@ for algo in sel_algos:
     ablCoordsDF[colName] = ablCoordsDF.apply(lambda x: np.std(x[algo+'_deltas'], ddof=1),axis=1)
 
 
-# In[88]:
+# In[82]:
 
 
 diff_stats_cols = ['CAP>JPNG','Test name','p','Sig']
 
 
-# In[89]:
+# In[83]:
 
 
 def get_delta_diff_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng_deltas', compare_label='CAP>JPNG', p_value=0.05, prefix=''):
@@ -739,7 +754,7 @@ def get_delta_diff_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng
     return pd.Series({prefix+compare_label:diff_col, prefix+'Test name':test_name_col, prefix+'p':p_value_col, prefix+'Sig':p_star_col})
 
 
-# In[90]:
+# In[84]:
 
 
 series = get_delta_diff_stats_cols(ablCoordsDF)
@@ -747,13 +762,13 @@ for col in diff_stats_cols:
     ablCoordsDF[col] = series[col]
 
 
-# In[91]:
+# In[85]:
 
 
 summary_stats_cols = summary_stats_cols + diff_stats_cols
 
 
-# In[92]:
+# In[86]:
 
 
 cols_disp = ['Subject', 'Recording'] + summary_stats_cols
@@ -761,7 +776,7 @@ print('Successive distance statistics: CAP and JPNG')
 display(ablCoordsDF[cols_disp])
 
 
-# In[93]:
+# In[87]:
 
 
 ablCoordsDF.to_hdf(export_path+'/ablationTipJumpsDF.hdf5',key='ablTjDF')
@@ -771,19 +786,19 @@ ablCoordsDF.to_csv(export_path+'/tip_delta_stats.csv', columns=cols_disp, float_
 # ## export for latex
 # Simplify the table for publication - no spaces, shorten names, use +/- symbol, remove unnecessary columns, etc. Use the csvsimple package to import these into latex.
 
-# In[94]:
+# In[88]:
 
 
 tip_delta_df = ablCoordsDF[cols_disp].rename(columns={'Experiment Name':'expmt','Test name':'Test',                                                       'CAP mean':'cap_mean', 'CAP std':'cap_std',                                                       'JPNG mean':'jpng_mean', 'JPNG std':'jpng_std',                                                      'CAP>JPNG':'cap_gt_jpng'})
 
 
-# In[95]:
+# In[89]:
 
 
 tip_delta_brief = tip_delta_df[['Subject','Recording','cap_mean', 'cap_std', 'jpng_mean','jpng_std', 'cap_gt_jpng',                                 'Test', 'p', 'Sig']]
 
 
-# In[96]:
+# In[90]:
 
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
@@ -791,14 +806,14 @@ for col in to_round:
     tip_delta_brief[col] = tip_delta_brief[col].map('{:,.2f}'.format)
 
 
-# In[97]:
+# In[91]:
 
 
 tip_delta_brief['CAP'] = tip_delta_brief.apply(lambda x: str(x['cap_mean']) + r'\pm' + str(x['cap_std']),axis=1)
 tip_delta_brief['JPNG'] = tip_delta_brief.apply(lambda x: str(x['jpng_mean']) + r'\pm' + str(x['jpng_std']),axis=1)
 
 
-# In[98]:
+# In[92]:
 
 
 for idx,row in tip_delta_brief.iterrows():
@@ -814,14 +829,14 @@ for idx,row in tip_delta_brief.iterrows():
         tip_delta_brief.loc[idx,'CAP'] = r'\textbf{' + expr[0:pm] + r'}' + expr[pm:]
 
 
-# In[99]:
+# In[93]:
 
 
 tip_delta_tex = tip_delta_brief.drop(columns=['cap_mean','cap_std','jpng_mean','jpng_std','cap_gt_jpng'])
 tip_delta_tex = tip_delta_tex[['Subject','Recording','CAP','JPNG','Test','p','Sig']]
 
 
-# In[100]:
+# In[94]:
 
 
 tip_delta_tex.to_csv(export_path+'/tip_delta_tex.csv', encoding='ascii', float_format='%.2g',index=False)
@@ -831,13 +846,13 @@ tip_delta_tex.to_csv(export_path+'/tip_delta_tex.csv', encoding='ascii', float_f
 # ## Angle between successive catheter orientations
 # Here we look at the angles between successive tip vectors (so the angle between the first tip orientation and the next tip orientation in time)
 
-# In[101]:
+# In[95]:
 
 
 ablCoordsDF['orientation_deltas'] = ablCoordsDF.apply(lambda x: displacement_utils.get_angles_from_coords(x['coords']),axis=1)
 
 
-# In[102]:
+# In[96]:
 
 
 def orientation_plot(experiment_name, description, msecs, orientations, show=False):
@@ -854,21 +869,22 @@ def orientation_plot(experiment_name, description, msecs, orientations, show=Fal
 
 # These plot the orientation delta between successive tip samples over time for each recording. The plots are saved to files. To see them inline, set `show=True` in the call below
 
-# In[103]:
+# In[97]:
 
 
 out = ablCoordsDF.apply(lambda x: orientation_plot(x['Experiment Name'], x['Description'], x['msecs'],                                                   x['orientation_deltas'], show=False),axis=1)
 
 
-# In[104]:
+# In[98]:
 
 
 def orientation_box_plot(experiment_name, description, orientations, axis=None):
     plot = None
+    stat_test = None
     if axis is None:
-        plot = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
     else:
-        plot = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
     title = 'Tip delta orientation ' + experiment_name + ': ' + description
     if axis is None:
         plot.title(title)
@@ -877,17 +893,20 @@ def orientation_box_plot(experiment_name, description, orientations, axis=None):
         plot.show()
     else:
         axis.set_title(title)
+    return stat_test
 
 
-# In[105]:
+# In[99]:
 
 
 fig, axes = plt.subplots(ncols=4, nrows=3, figsize=(20, 15))
 ax_list = list(chain.from_iterable(zip(*axes))) # single iterable list for 2d array
 to_plot_df = ablCoordsDF[['Subject','Recording','orientation_deltas']]
+stat_tests = []
 
 for idx,row in enumerate(to_plot_df.itertuples()):
-    orientation_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.orientation_deltas, axis=ax_list[idx])
+    test = orientation_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.orientation_deltas, axis=ax_list[idx])
+    stat_tests.append(test)
 
 plt.tight_layout()
 fig.subplots_adjust(top=0.88)
@@ -896,7 +915,11 @@ plt.savefig(figure_path+'/tipOrientationDeltaBoxPlot.png')
 plt.show()
 
 
-# In[106]:
+for t in stat_tests:
+    print(f'{t}, ',end='')
+
+
+# In[100]:
 
 
 tipOrientationDF = ablCoordsDF[["Subject","Recording"]].copy()
@@ -912,20 +935,20 @@ for algo in displacement_utils.select_algos:
     tipOrientationDF[colName] = ablCoordsDF.apply(lambda x: np.std(x['orientation_deltas'][algo],ddof=1),axis=1)
 
 
-# In[107]:
+# In[101]:
 
 
 ablCoordsDF['cap_orientation_delta'] = ablCoordsDF.apply(lambda x: x['orientation_deltas']['centroid_around_peak'], axis=1)
 ablCoordsDF['jpng_orientation_delta'] = ablCoordsDF.apply(lambda x: x['orientation_deltas']['jpng'], axis=1)
 
 
-# In[108]:
+# In[102]:
 
 
 tip_delta_diff_stats_cols = [prefix + i for i in diff_stats_cols]
 
 
-# In[109]:
+# In[103]:
 
 
 def get_delta_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng_deltas', compare_label='CAP>JPNG', p_value=0.05, prefix=''):
@@ -943,26 +966,26 @@ def get_delta_stats_cols(df, col1='centroid_around_peak_deltas', col2='jpng_delt
     return pd.Series({prefix+compare_label:diff_col, prefix+'Test name':test_name_col, prefix+'p':p_value_col, prefix+'Sig':p_star_col})
 
 
-# In[110]:
+# In[104]:
 
 
 series = get_delta_stats_cols(ablCoordsDF, col1='cap_orientation_delta',col2='jpng_orientation_delta',prefix=prefix)
 
 
-# In[111]:
+# In[105]:
 
 
 for col in tip_delta_diff_stats_cols:
     tipOrientationDF[col] = series[col]
 
 
-# In[112]:
+# In[106]:
 
 
 tipOrientation_df = tipOrientationDF.rename(columns={'mean_tilt_delta_cap':'CAP mean', 'std_tilt_delta_cap':'CAP std',                                                     'mean_tilt_delta_jpng':'JPNG mean', 'std_tilt_delta_jpng':'JPNG std',                                                     'tilt_delta_CAP>JPNG':'CAP>JPNG', 'tilt_delta_Test name':'Test name',                                                    'tilt_delta_p':'p', 'tilt_delta_Sig':'Sig'})
 
 
-# In[113]:
+# In[107]:
 
 
 tipOrientation_df.to_csv(export_path+'/tipOrientationDelta_stats.csv',float_format='%.2g', index=False)
@@ -971,19 +994,19 @@ tipOrientation_df.to_csv(export_path+'/tipOrientationDelta_stats.csv',float_form
 # ## format for latex
 # export table to a format suitable for latex import using csvsimple
 
-# In[114]:
+# In[108]:
 
 
 tip_orientation = tipOrientationDF.rename(columns={'Experiment Name':'expmt','mean_tilt_delta_cap':'cap_mean',                                                   'std_tilt_delta_cap':'cap_std','mean_tilt_delta_jpng':'jpng_mean',                                                   'std_tilt_delta_jpng':'jpng_std','tilt_delta_Test name':'Test',                                                   'tilt_delta_CAP>JPNG':'cap_gt_jpng','tilt_delta_p':'p',                                                    'tilt_delta_Sig':'Sig'})
 
 
-# In[115]:
+# In[109]:
 
 
 tip_orientation = tip_orientation[['Subject','Recording','cap_mean', 'cap_std', 'jpng_mean','jpng_std',                                    'cap_gt_jpng', 'Test', 'p','Sig']]
 
 
-# In[116]:
+# In[110]:
 
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
@@ -991,21 +1014,21 @@ for col in to_round:
     tip_orientation[col] = tip_orientation[col].map('{:,.2f}'.format)
 
 
-# In[117]:
+# In[111]:
 
 
 tip_orientation['CAP'] = tip_orientation.apply(lambda x: str(x['cap_mean']) + r'\pm' + str(x['cap_std']),axis=1)
 tip_orientation['JPNG'] = tip_orientation.apply(lambda x: str(x['jpng_mean']) + r'\pm' + str(x['jpng_std']),axis=1)
 
 
-# In[118]:
+# In[112]:
 
 
 print("Successive tip angles: CAP vs JPNG")
 display(tip_orientation)
 
 
-# In[119]:
+# In[113]:
 
 
 for idx,row in tip_orientation.iterrows():
@@ -1021,14 +1044,14 @@ for idx,row in tip_orientation.iterrows():
         tip_orientation.loc[idx,'CAP'] = r'\textbf{' + expr[0:pm] + r'}' + expr[pm:]
 
 
-# In[120]:
+# In[114]:
 
 
 tip_orientation.drop(columns=['cap_mean','cap_std','jpng_mean','jpng_std','cap_gt_jpng'],inplace=True)
 tip_orientation_delta_tex = tip_orientation[['Subject','Recording','CAP','JPNG','Test','p','Sig']]
 
 
-# In[121]:
+# In[115]:
 
 
 tip_orientation_delta_tex.to_csv(export_path+'/tip_orientation_delta_tex.csv', encoding='ascii', float_format='%.2g',index=False)
@@ -1037,19 +1060,19 @@ tip_orientation_delta_tex.to_csv(export_path+'/tip_orientation_delta_tex.csv', e
 # ## Orientation angles from mean tip vectors
 # Here, instead of computing the angles between successive tip vectors, we compare each tip vector to the mean tip vector from that recording and algorithm
 
-# In[122]:
+# In[116]:
 
 
 tipOrientationDF = ablCoordsDF[["Subject","Recording"]].copy()
 
 
-# In[123]:
+# In[117]:
 
 
 ablCoordsDF['tip_unit_vecs'] = ablCoordsDF.apply(lambda x: displacement_utils.get_unit_vectors(x['coords']),axis=1)
 
 
-# In[124]:
+# In[118]:
 
 
 def get_mean_vecs(unit_vec_dicts):
@@ -1059,19 +1082,19 @@ def get_mean_vecs(unit_vec_dicts):
     return algo_vecs 
 
 
-# In[125]:
+# In[119]:
 
 
 ablCoordsDF['mean_tip_unit_vecs'] = ablCoordsDF.apply(lambda x: get_mean_vecs(x['tip_unit_vecs']),axis=1)
 
 
-# In[126]:
+# In[120]:
 
 
 ablCoordsDF['tip_angles_from_mean'] = ablCoordsDF.apply(lambda x: displacement_utils.get_angles_from_means(x['mean_tip_unit_vecs'],x['tip_unit_vecs']),axis=1)
 
 
-# In[127]:
+# In[121]:
 
 
 def tilt_from_mean_plot(experiment_name, description, msecs, orientations, show=False):
@@ -1088,21 +1111,22 @@ def tilt_from_mean_plot(experiment_name, description, msecs, orientations, show=
 
 # These plot the angle to the mean angle over time for each recording. The plots are saved to files. To see them inline, set `show=True` in the call below
 
-# In[128]:
+# In[122]:
 
 
 out = ablCoordsDF.apply(lambda x: tilt_from_mean_plot(x['Experiment Name'], x['Description'], x['msecs'],x['tip_angles_from_mean'],show=False),axis=1)
 
 
-# In[129]:
+# In[123]:
 
 
 def tip_tilt_box_plot(experiment_name, description, orientations, axis=None):
     plot = None
+    stat_test = None
     if axis is None:
-        plot = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None)
     else:
-        plot = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
+        plot,stat_test = displacement_utils.plot_displacement_boxplot(orientations,set_ymax=None, plot=axis)
     title = 'Tip tilt from mean ' + experiment_name + ': ' + description
     if axis is None:
         plot.title(title)       
@@ -1111,17 +1135,20 @@ def tip_tilt_box_plot(experiment_name, description, orientations, axis=None):
         plot.show()
     else:
         axis.set_title(title)
+    return stat_test
 
 
-# In[130]:
+# In[124]:
 
 
 fig, axes = plt.subplots(ncols=4, nrows=3, figsize=(20, 15))
 ax_list = list(chain.from_iterable(zip(*axes))) # single iterable list for 2d array
 to_plot_df = ablCoordsDF[['Subject','Recording','tip_angles_from_mean']]
+stat_tests = []
 
 for idx,row in enumerate(to_plot_df.itertuples()):
-    tip_tilt_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.tip_angles_from_mean, axis=ax_list[idx])
+    test = tip_tilt_box_plot('Subject '+str(row.Subject), 'Recording ' + str(row.Recording), row.tip_angles_from_mean, axis=ax_list[idx])
+    stat_tests.append(test)
 
 plt.tight_layout()
 fig.subplots_adjust(top=0.88)
@@ -1130,7 +1157,11 @@ plt.savefig(figure_path+'/tipOrientationFromMeanBoxPlot.png')
 plt.show()
 
 
-# In[131]:
+for t in stat_tests:
+    print(f'{t}, ',end='')
+
+
+# In[125]:
 
 
 for algo in displacement_utils.select_algos:
@@ -1142,33 +1173,33 @@ for algo in displacement_utils.select_algos:
     tipOrientationDF[colName] = ablCoordsDF.apply(lambda x: np.std(x['tip_angles_from_mean'][algo],ddof=1),axis=1)
 
 
-# In[132]:
+# In[126]:
 
 
 ablCoordsDF['cap_tip_tilt_from_mean'] = ablCoordsDF.apply(lambda x: x['tip_angles_from_mean']['centroid_around_peak'], axis=1)
 ablCoordsDF['jpng_tip_tilt_from_mean'] = ablCoordsDF.apply(lambda x: x['tip_angles_from_mean']['jpng'], axis=1)
 
 
-# In[133]:
+# In[127]:
 
 
 series = get_delta_stats_cols(ablCoordsDF, col1='cap_tip_tilt_from_mean',col2='jpng_tip_tilt_from_mean')
 
 
-# In[134]:
+# In[128]:
 
 
 for col in diff_stats_cols:
     tipOrientationDF[col] = series[col]
 
 
-# In[135]:
+# In[129]:
 
 
 tipOrientationDF.to_csv(export_path+'/tipTiltFromMean_stats.csv',float_format='%.2g', index=False)
 
 
-# In[136]:
+# In[130]:
 
 
 ablCoordsDF.to_hdf(export_path+'/ablationTipJumpsOrientationDF.hdf5',key='ablTjoDF')
@@ -1177,14 +1208,14 @@ ablCoordsDF.to_hdf(export_path+'/ablationTipJumpsOrientationDF.hdf5',key='ablTjo
 # ## export to latex format
 # Export tables to csv that can be imported into latex using csvsimple
 
-# In[137]:
+# In[131]:
 
 
 tip_angle_df = tipOrientationDF.rename(columns={'Experiment Name':'expmt','Test name':'Test', 'CAP mean':'cap_mean',                                 'CAP std':'cap_std', 'JPNG mean':'jpng_mean', 'JPNG std':'jpng_std',                                 'CAP>JPNG':'cap_gt_jpng'}) # Get rid of spaces, illegal chars
 tip_angle_brief = tip_angle_df[['Subject','Recording','cap_mean', 'cap_std', 'jpng_mean','jpng_std', 'cap_gt_jpng',                                 'Test', 'p', 'Sig']]
 
 
-# In[138]:
+# In[132]:
 
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
@@ -1192,14 +1223,14 @@ for col in to_round:
     tip_angle_brief[col] = tip_angle_brief[col].map('{:,.2f}'.format)
 
 
-# In[139]:
+# In[133]:
 
 
 tip_angle_brief['CAP'] = tip_angle_brief.apply(lambda x: str(x['cap_mean']) + r'\pm' + str(x['cap_std']),axis=1)
 tip_angle_brief['JPNG'] = tip_angle_brief.apply(lambda x: str(x['jpng_mean']) + r'\pm' + str(x['jpng_std']),axis=1)
 
 
-# In[140]:
+# In[134]:
 
 
 for idx,row in tip_angle_brief.iterrows():
@@ -1215,20 +1246,20 @@ for idx,row in tip_angle_brief.iterrows():
         tip_angle_brief.loc[idx,'CAP'] = r'\textbf{' + expr[0:pm] + r'}' + expr[pm:]
 
 
-# In[141]:
+# In[135]:
 
 
 tip_angle_brief.drop(columns=['cap_mean','cap_std','jpng_mean','jpng_std','cap_gt_jpng'],inplace=True)
 tip_angle_tex = tip_angle_brief[['Subject','Recording','CAP','JPNG','Test','p','Sig']]
 
 
-# In[142]:
+# In[136]:
 
 
 tip_angle_tex.to_csv(export_path+'/tipTiltFromMean_tex.csv',encoding='ascii', float_format='%.2g', index=False)
 
 
-# In[143]:
+# In[137]:
 
 
 print("Tip angles to mean orientation: CAP vs JPNG")

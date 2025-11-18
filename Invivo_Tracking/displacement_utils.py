@@ -95,9 +95,10 @@ def plot_displacement_diff(x_values, displacements, algo_1, algo_2):
 def plot_displacement_boxplot(displacements, selected_algos = select_algos, show_scatter = True, y_label="Distances from centroid (mm)", set_ymax=15, p_value=0.05, plot=plt):
     """ Show boxplots comparing displacements from different algorithms
     Runs paired t test / Wilcoxon signed rank test if only two algorithms are passed in
-    Returns the plot
+    Returns the plot and which statistical test was used (if two algorithms were passed in)
     """
     plot_arrays = displacements
+    stat_test = None
     is_dict = type(displacements) == dict
     if (is_dict):
         plot_arrays = [displacements[i] for i in selected_algos]
@@ -122,7 +123,7 @@ def plot_displacement_boxplot(displacements, selected_algos = select_algos, show
             plot.plot(x, y, 'r.', alpha=0.4)
     if (len(selected_algos) == 2):
         # check for sig diff
-        diff_arr, _, p = test_displacements_means_diff_paired(displacements, [selected_algos], p_value, quiet=True)
+        diff_arr, stat_test, p = test_displacements_means_diff_paired(displacements, [selected_algos], p_value, quiet=True)
         if diff_arr[0] != 0: # reject equal means null hypoth
             # draw a line: using max_y can be too high if there are cropped outliers
             starline_y = max_y
@@ -148,7 +149,7 @@ def plot_displacement_boxplot(displacements, selected_algos = select_algos, show
     else:
         plot.set_xlabel('Algorithm')
         plot.set_ylabel(y_label)
-    return plot
+    return plot, stat_test
 
 def print_displacement_stats(dists, p_value=0.05):
     disp_stats = {}
