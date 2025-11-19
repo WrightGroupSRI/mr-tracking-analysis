@@ -775,53 +775,6 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 # In[14]:
 
 
-# Merge data for error boxplots, plot them to compare error across sequences, and save them to directory
-
-plot_df_resp = merge_plot_dfs([SRI_2_jpng_plot_df_231_resp, SRI_2_jpng_plot_df_299_resp, SRI_2_jpng_plot_df_306_resp, FH512_2_jpng_plot_df_231_resp, FH512_2_jpng_plot_df_299_resp, FH512_2_jpng_plot_df_306_resp])
-plot_df_card = merge_plot_dfs([SRI_2_jpng_plot_df_231_card, SRI_2_jpng_plot_df_299_card, SRI_2_jpng_plot_df_306_card, FH512_2_jpng_plot_df_231_card, FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
-
-print("Respiratory Motion Profile: JPNG Tip Error")
-plot_error_box_plot(plot_df_resp, box_plot_path, sequences, equal_variance=False, alternative='less')
-
-print("Cardiac Motion Profile: JPNG Tip Error")
-plot_error_box_plot(plot_df_card, box_plot_path, sequences, equal_variance=False, alternative='less')
-
-
-# In[15]:
-
-
-w_presp, p_presp = stats.shapiro(plot_df_resp[plot_df_resp.Sequence=='3P']['Total Error'])
-w_pcard, p_pcard = stats.shapiro(plot_df_card[plot_df_card.Sequence=='3P']['Total Error'])
-
-w_hresp, p_hresp = stats.shapiro(plot_df_resp[plot_df_resp.Sequence=='HM']['Total Error'])
-w_hcard, p_hcard = stats.shapiro(plot_df_card[plot_df_card.Sequence=='HM']['Total Error'])
-
-print('Shapiro-Wilk normality test scores for sequence data merging different catheters:')
-print(f"3P\n\tresp w={w_presp}, p={p_presp}\n\tcard w={w_pcard}, p={p_pcard}")
-print(f"HM\n\tresp w={w_hresp}, p={p_hresp}\n\tcard w={w_hcard}, p={p_hcard}")
-
-
-# In[16]:
-
-
-sns.histplot(plot_df_resp[plot_df_resp.Sequence=='3P'],x='Total Error', hue='Catheter')
-
-
-# In[17]:
-
-
-sns.histplot(plot_df_card[plot_df_card.Sequence=='HM'], x='Total Error', hue='Catheter')
-
-
-# In[18]:
-
-
-plot_df_card.head()
-
-
-# In[19]:
-
-
 # Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
 # Only for the HM (FH512) sequence
 algos = [cap,jpng]
@@ -845,63 +798,10 @@ for algo in algos:
     print(f'\tCardiac tip error for {algo}: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
 
 
-# In[20]:
-
-
-w_jresp, p_jresp = stats.shapiro(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng]['Total Error'])
-w_jcard, p_jcard = stats.shapiro(hm_plot_df_card[hm_plot_df_card.Algorithm==jpng]['Total Error'])
-
-w_cresp, p_cresp = stats.shapiro(hm_plot_df_resp[hm_plot_df_resp.Algorithm==cap]['Total Error'])
-w_ccard, p_ccard = stats.shapiro(hm_plot_df_card[hm_plot_df_card.Algorithm==cap]['Total Error'])
-
-print('Shapiro-Wilk normality test scores for HM-only algorithm data merging different catheters:')
-print(f"JPNG\n\tresp w={w_jresp}, p={p_jresp}\n\tcard w={w_jcard}, p={p_jcard}")
-print(f"CAP\n\tresp w={w_cresp}, p={p_cresp}\n\tcard w={w_ccard}, p={p_ccard}")
-
-
-# In[21]:
-
-
-sns.histplot(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng],x='Total Error', hue='Catheter')
-
-
-# In[22]:
-
-
-sns.histplot(hm_plot_df_card[hm_plot_df_card.Algorithm==cap],x='Total Error', hue='Catheter')
-
-
-# In[23]:
-
-
-# Note plot_df_resp and plot_df_card collect ONLY the jpng algorithm results
-print('Respiratory Motion: JPNG Tip Error')
-resp_hm_mean = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].mean()
-resp_hm_std = plot_df_resp[plot_df_resp['Sequence']=='HM']['Total Error'].std()
-
-
-resp_3p_mean = plot_df_resp[plot_df_resp['Sequence']=='3P']['Total Error'].mean()
-resp_3p_std = plot_df_resp[plot_df_resp['Sequence']=='3P']['Total Error'].std()
-
-print(f'\tHM: {resp_hm_mean:.2f}\u00B1{resp_hm_std:.2f} mm')
-print(f'\t3P: {resp_3p_mean:.2f}\u00B1{resp_3p_std:.2f} mm')
-
-print('\nCardiac Motion: JPNG Tip Error')
-card_hm_mean = plot_df_card[plot_df_card['Sequence']=='HM']['Total Error'].mean()
-card_hm_std = plot_df_card[plot_df_card['Sequence']=='HM']['Total Error'].std()
-
-
-card_3p_mean = plot_df_card[plot_df_card['Sequence']=='3P']['Total Error'].mean()
-card_3p_std = plot_df_card[plot_df_card['Sequence']=='3P']['Total Error'].std()
-
-print(f'\tHM: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
-print(f'\t3P: {card_3p_mean:.2f}\u00B1{card_3p_std:.2f} mm')
-
-
 # # HDF5 Exports
 # Each of the error dataframes - named according to sequence, algorithm, catheter, and motion profile - has been saved as a group into the dynamic_tracking_tip_errors.h5 file. To examine a particular data frame, use the pandas [read_hdf](https://pandas.pydata.org/docs/reference/api/pandas.read_hdf.html) method as shown below:
 
-# In[24]:
+# In[15]:
 
 
 pd.read_hdf(h5out, key="C3P_CAP_cath306_cardiac")
