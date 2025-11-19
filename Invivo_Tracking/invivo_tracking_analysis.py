@@ -591,7 +591,7 @@ to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
 
 
 for col in to_round:
-    abl_df_brief[col] = abl_df_brief[col].map('{:,.2f}'.format)
+    abl_df_brief[col] = abl_df_brief[col].map('{:,.1f}'.format)
 
 
 # In[70]:
@@ -639,7 +639,7 @@ abl_df_tex = abl_df_brief[['Subject','Recording','CAP','JPNG','Test','p','Sig']]
 # In[75]:
 
 
-abl_df_tex.to_csv(export_path+'/distance_to_centroid_tex.csv', encoding='ascii',float_format='%.2g',index=False)
+abl_df_tex.to_csv(export_path+'/distance_to_centroid_tex.csv', encoding='ascii',float_format='%.1g',index=False)
 
 
 # # Look at successive tip distances
@@ -803,7 +803,7 @@ tip_delta_brief = tip_delta_df[['Subject','Recording','cap_mean', 'cap_std', 'jp
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
 for col in to_round:
-    tip_delta_brief[col] = tip_delta_brief[col].map('{:,.2f}'.format)
+    tip_delta_brief[col] = tip_delta_brief[col].map('{:,.1f}'.format)
 
 
 # In[91]:
@@ -839,7 +839,7 @@ tip_delta_tex = tip_delta_tex[['Subject','Recording','CAP','JPNG','Test','p','Si
 # In[94]:
 
 
-tip_delta_tex.to_csv(export_path+'/tip_delta_tex.csv', encoding='ascii', float_format='%.2g',index=False)
+tip_delta_tex.to_csv(export_path+'/tip_delta_tex.csv', encoding='ascii', float_format='%.1g',index=False)
 
 
 # # Tip directions
@@ -1011,7 +1011,7 @@ tip_orientation = tip_orientation[['Subject','Recording','cap_mean', 'cap_std', 
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
 for col in to_round:
-    tip_orientation[col] = tip_orientation[col].map('{:,.2f}'.format)
+    tip_orientation[col] = tip_orientation[col].map('{:,.1f}'.format)
 
 
 # In[111]:
@@ -1054,7 +1054,7 @@ tip_orientation_delta_tex = tip_orientation[['Subject','Recording','CAP','JPNG',
 # In[115]:
 
 
-tip_orientation_delta_tex.to_csv(export_path+'/tip_orientation_delta_tex.csv', encoding='ascii', float_format='%.2g',index=False)
+tip_orientation_delta_tex.to_csv(export_path+'/tip_orientation_delta_tex.csv', encoding='ascii', float_format='%.1g',index=False)
 
 
 # ## Orientation angles from mean tip vectors
@@ -1220,7 +1220,7 @@ tip_angle_brief = tip_angle_df[['Subject','Recording','cap_mean', 'cap_std', 'jp
 
 to_round = ['cap_mean', 'cap_std', 'jpng_mean', 'jpng_std']
 for col in to_round:
-    tip_angle_brief[col] = tip_angle_brief[col].map('{:,.2f}'.format)
+    tip_angle_brief[col] = tip_angle_brief[col].map('{:,.1f}'.format)
 
 
 # In[133]:
@@ -1256,7 +1256,7 @@ tip_angle_tex = tip_angle_brief[['Subject','Recording','CAP','JPNG','Test','p','
 # In[136]:
 
 
-tip_angle_tex.to_csv(export_path+'/tipTiltFromMean_tex.csv',encoding='ascii', float_format='%.2g', index=False)
+tip_angle_tex.to_csv(export_path+'/tipTiltFromMean_tex.csv',encoding='ascii', float_format='%.1g', index=False)
 
 
 # In[137]:
