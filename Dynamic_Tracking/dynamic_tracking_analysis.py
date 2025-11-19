@@ -772,7 +772,7 @@ plot_motion_error(FH512_2_jpng_tip_299_card, FH512_2_jpng_tip_expected_299_card,
 
 # # Generate Error Boxplots
 
-# In[19]:
+# In[14]:
 
 
 # Merge data for error boxplots, plot them to compare error across sequences, and save them to directory
@@ -787,7 +787,7 @@ print("Cardiac Motion Profile: JPNG Tip Error")
 plot_error_box_plot(plot_df_card, box_plot_path, sequences, equal_variance=False, alternative='less')
 
 
-# In[28]:
+# In[15]:
 
 
 w_presp, p_presp = stats.shapiro(plot_df_resp[plot_df_resp.Sequence=='3P']['Total Error'])
@@ -801,35 +801,35 @@ print(f"3P\n\tresp w={w_presp}, p={p_presp}\n\tcard w={w_pcard}, p={p_pcard}")
 print(f"HM\n\tresp w={w_hresp}, p={p_hresp}\n\tcard w={w_hcard}, p={p_hcard}")
 
 
-# In[33]:
+# In[16]:
 
 
 sns.histplot(plot_df_resp[plot_df_resp.Sequence=='3P'],x='Total Error', hue='Catheter')
 
 
-# In[34]:
+# In[17]:
 
 
 sns.histplot(plot_df_card[plot_df_card.Sequence=='HM'], x='Total Error', hue='Catheter')
 
 
-# In[32]:
+# In[18]:
 
 
 plot_df_card.head()
 
 
-# In[15]:
+# In[19]:
 
 
 # Merge HM (FH512) sequence data for error boxplots, plot to compare error across algorithms, and save to directory
 # Only for the HM (FH512) sequence
-algos = [jpng,cap]
+algos = [cap,jpng]
 hm_plot_df_resp = merge_plot_dfs([FH512_2_cap_plot_df_231_resp, FH512_2_cap_plot_df_299_resp,                                   FH512_2_cap_plot_df_306_resp, FH512_2_jpng_plot_df_231_resp,                                   FH512_2_jpng_plot_df_299_resp, FH512_2_jpng_plot_df_306_resp])
 hm_plot_df_card = merge_plot_dfs([FH512_2_cap_plot_df_231_card, FH512_2_cap_plot_df_299_card,                                   FH512_2_cap_plot_df_306_card, FH512_2_jpng_plot_df_231_card,                                   FH512_2_jpng_plot_df_299_card, FH512_2_jpng_plot_df_306_card])
 
 print("Respiratory Motion Profile: HM Tip Error by Algorithm")
-plot_error_box_plot(hm_plot_df_resp, box_plot_path, algos, plotBy="Algorithm", independent=False, equal_variance=False)
+plot_error_box_plot_wilcoxon(hm_plot_df_resp, box_plot_path, algos, alternative='greater')
 
 for algo in algos:
     resp_hm_mean = hm_plot_df_resp[hm_plot_df_resp['Algorithm'] == algo]["Total Error"].mean()
@@ -837,7 +837,7 @@ for algo in algos:
     print(f'\tRespiratory tip error for {algo}: {resp_hm_mean:.2f}\u00B1{resp_hm_std:.2f} mm')
 
 print("\n\nCardiac Motion Profile: HM Tip Error by Algorithm")
-plot_error_box_plot(hm_plot_df_card, box_plot_path, algos, plotBy="Algorithm")
+plot_error_box_plot_wilcoxon(hm_plot_df_card, box_plot_path, algos, alternative='greater')
 
 for algo in algos:
     card_hm_mean = hm_plot_df_card[hm_plot_df_card['Algorithm'] == algo]["Total Error"].mean()
@@ -845,7 +845,7 @@ for algo in algos:
     print(f'\tCardiac tip error for {algo}: {card_hm_mean:.2f}\u00B1{card_hm_std:.2f} mm')
 
 
-# In[38]:
+# In[20]:
 
 
 w_jresp, p_jresp = stats.shapiro(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng]['Total Error'])
@@ -859,19 +859,19 @@ print(f"JPNG\n\tresp w={w_jresp}, p={p_jresp}\n\tcard w={w_jcard}, p={p_jcard}")
 print(f"CAP\n\tresp w={w_cresp}, p={p_cresp}\n\tcard w={w_ccard}, p={p_ccard}")
 
 
-# In[37]:
+# In[21]:
 
 
 sns.histplot(hm_plot_df_resp[hm_plot_df_resp.Algorithm==jpng],x='Total Error', hue='Catheter')
 
 
-# In[39]:
+# In[22]:
 
 
 sns.histplot(hm_plot_df_card[hm_plot_df_card.Algorithm==cap],x='Total Error', hue='Catheter')
 
 
-# In[16]:
+# In[23]:
 
 
 # Note plot_df_resp and plot_df_card collect ONLY the jpng algorithm results
@@ -901,7 +901,7 @@ print(f'\t3P: {card_3p_mean:.2f}\u00B1{card_3p_std:.2f} mm')
 # # HDF5 Exports
 # Each of the error dataframes - named according to sequence, algorithm, catheter, and motion profile - has been saved as a group into the dynamic_tracking_tip_errors.h5 file. To examine a particular data frame, use the pandas [read_hdf](https://pandas.pydata.org/docs/reference/api/pandas.read_hdf.html) method as shown below:
 
-# In[17]:
+# In[24]:
 
 
 pd.read_hdf(h5out, key="C3P_CAP_cath306_cardiac")

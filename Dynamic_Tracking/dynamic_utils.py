@@ -494,6 +494,97 @@ def pval_to_stars(pval):
     else:
         return ''
 
+def plot_error_box_plot_wilcoxon(plot_df, plot_path, categories, plotBy="Algorithm", save=True, alternative='less'):
+    """Plots boxplot with plot_df being the dataframe with the sequence, coil, and total error info
+
+    Statistical comparison with Wilcoxon signed rank test is run and a star bar is drawn in case of significance
+    
+    plot_df: data frame containing the values
+    plot_path: directory for saving plot files, used if save is True
+    categories: list of 2 categories in the plotBy column. Each will get a box - first on the left, second on the right
+    plotBy: which column to use to plot by on the X axis (Sequence / Algorithm)
+    save: True to save plots to files, False otherwise
+    alternative: 'two-sided', 'less', or 'greater' to indicate a two-tailed or one-tailed test. less & greater will both do one-tailed tests, using the categories order
+     - less: alternative hypothesis that category[0] < category[1]
+     - greater: alternative hypothesis that category[0] > category[1]
+    """
+    
+    catheter = plot_df['Catheter'][0]
+    profile = plot_df['Profile'][0]
+    sequence = plot_df['Sequence'][0]
+    algorithm = plot_df['Algorithm'][0]
+    # Algorithm names are short except for centroid about peak, so fix this for plot labelling:
+    algo_dict = {'centroid_around_peak':'CAP'}
+
+    plot_df[plotBy] = pd.Categorical(plot_df[plotBy], categories=[categories[0], categories[1]], ordered=True)
+
+    sns.set_style("whitegrid", {'grid.color': '0.8', 'axes.edgecolor': 'black', 'axes.spines.right': False, 'axes.spines.top': False, 'xtick.bottom': True, 'ytick.left': True})
+    
+    fig = plt.figure(figsize = (9, 8))
+
+    ax1 = sns.boxplot(x = plot_df[plotBy], y = plot_df['Total Error'], orient = 'v', width = 0.4, showfliers = False, linewidth = 2, palette = "Set2")
+    xtick_labels = ax1.get_xticklabels()
+    # Use the uppercase version of the category or use algo_dict if the name is in there
+    xtick_new_labels = [algo_dict[x.get_text()] if x.get_text() in algo_dict else x.get_text().upper() for x in xtick_labels]
+    ax1.set_xticklabels(xtick_new_labels)
+    plt.ylabel('Total Tip Error (mm)', fontsize = 36)
+    # plt.ylabel('Total Tip Error (mm)', fontsize = 20, fontweight = 'bold')
+    plt.ylim(0, 13)
+
+    # For p-value plotting
+    total_error_a = plot_df.query(plotBy+"=='"+categories[0]+"'")['Total Error']
+    total_error_b = plot_df.query(plotBy+"=='"+categories[1]+"'")['Total Error']
+    w = p_r = 0
+    
+    w, p_r = stats.wilcoxon(x=total_error_a,y=total_error_b,alternative=alternative)
+    if alternative != 'two-sided': # Check the test score to ensure it's in the expected direction
+        if (alternative == 'greater' and w < 0) or (alternative == 'less' and w > 0):
+            print(f'Wilcoxon one-tailed, alternative: {alternative}, w: {w}, p_val: {p_r}, wrong direction')
+            p_r = 1-p_r # wrong direction: adjust p-value
+
+    # Calculate the maximum whisker height for category 1
+    Q1 = np.percentile(total_error_a, 25)
+    Q3 = np.percentile(total_error_a, 75)
+    IQR = Q3 - Q1
+    max_whisker_height_a = Q3 + 1.5 * IQR
+
+    # Calculate the maximum whisker height for category 0
+    Q1 = np.percentile(total_error_b, 25)
+    Q3 = np.percentile(total_error_b, 75)
+    IQR = Q3 - Q1
+    max_whisker_height_b = Q3 + 1.5 * IQR
+
+    stars = pval_to_stars(p_r)
+    
+    if stars:
+        x1, x2 = 0, 1
+        y, h, col = max_whisker_height_a + 0.5, 0.25, 'k'
+        ymax = np.max([np.max(max_whisker_height_b), np.max(max_whisker_height_a)])
+        y = ymax + 0.5
+        ax1.plot([x1, x1, x2, x2], [y, y+h, y+h, y], lw=1.5, c=col)
+        ax1.text((x1+x2)*.5, y+h, stars, ha='center',
+                 va='bottom', color=col, fontsize=32)
+
+    plt.xlabel(plotBy, fontsize = 36)
+    plt.minorticks_on()
+    plt.tick_params(which = 'minor', bottom=False)
+    plt.tick_params(which = 'minor', direction = 'in', color = 'grey')
+    plt.xticks(fontsize = 32)
+    plt.yticks(fontsize = 32)
+    plt.axhline(y = 5, color = 'r', linestyle = '--', linewidth = 2, label = '5mm Error Constraint')
+    plt.legend(loc = 'upper right', fontsize = 24)
+    plt.tight_layout()
+    
+    if save == True:
+        if not os.path.isdir(plot_path + '{}'.format(profile)):
+            os.makedirs(plot_path + '{}'.format(profile))
+        
+        fig.savefig(plot_path + '{}/box_error_tip_by{}.pdf'.format(profile,plotBy), dpi=600)
+
+    plt.show()
+    
+    return
+
 def plot_error_box_plot(plot_df, plot_path, categories, plotBy="Sequence", save=True, independent=True, equal_variance=True, alternative='two-sided'):
     """Plots boxplot with plot_df being the dataframe with the sequence, coil, and total error info
 
