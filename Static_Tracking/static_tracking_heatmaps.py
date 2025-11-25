@@ -12,6 +12,7 @@ import os
 import h5py
 import static_utils
 import pathlib
+import pandas as pd
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
@@ -46,15 +47,15 @@ catheter_labels = ['C222','C231','C306']
 main_paths = {} # input coordinate data from each catheter and position
 heatmap_paths = {} # exported heatmap plots
 xpmt_date_dict = {
-    ('C222','Y0'):'17Aug2021',
-    ('C231','Y0'):'15Dec2021',
-    ('C306','Y0'):'13Dec2021',
-    ('C222','Y1'):'8Nov2021',
-    ('C231','Y1'):'21Dec2021',
-    ('C306','Y1'):'6Jan2022',
-    ('C222','Y2'):'9Nov2021',
-    ('C231','Y2'):'9Jan2022',
-    ('C306','Y2'):'7Jan2022',
+    (catheter_labels[0],'Y0'):'17Aug2021',
+    (catheter_labels[1],'Y0'):'15Dec2021',
+    (catheter_labels[2],'Y0'):'13Dec2021',
+    (catheter_labels[0],'Y1'):'8Nov2021',
+    (catheter_labels[1],'Y1'):'21Dec2021',
+    (catheter_labels[2],'Y1'):'6Jan2022',
+    (catheter_labels[0],'Y2'):'9Nov2021',
+    (catheter_labels[1],'Y2'):'9Jan2022',
+    (catheter_labels[2],'Y2'):'7Jan2022',
 }
 for yloc in y_locations:
     main_paths[yloc.in_suffix] = []
@@ -80,15 +81,26 @@ Gt_filename = '1GroundTruthCoords.csv'
 geometry_index = 1
 
 
+# In[4]:
+
+
+def get_catheter_from_path(path):
+    for c in catheter_labels:
+        if c in path:
+            return c
+    return None
+
+
 # # Error Heatmaps
 # 
 # For each sequence and localization algorithm of interest, plot the heatmap of average tip errors at each position. Each position has recordings from three catheters.
 
-# In[4]:
+# In[5]:
 
 
 sequences = ['SRI_Original', 'FH512_noDither_gradSpoiled']
 algorithms = ['centroid_around_peak', 'jpng']
+aggregate_data = []
 
 os.makedirs(error_path, exist_ok=True)
 
@@ -98,7 +110,14 @@ for yloc in y_locations:
         for alg in algorithms:
             main_path = main_paths[yloc.in_suffix]
             path_dct = static_utils.get_catheter_data(main_path, seq, alg, Gt_filename, geometry_index)
-            # Average the error
+            # Aggregate
+            for path in main_path: # path per catheter
+                cath_label = get_catheter_from_path(path)
+                for loc in range(16): # for each grid location
+                    bias = path_dct[path][loc][2]
+                    variance =  path_dct[path][loc][3]
+                    aggregate_data.append({'Y_Loc': yloc.in_suffix, 'Sequence':seq, 'Algorithm': alg, 'Catheter':cath_label,                              'Grid_Loc':loc+1, 'Bias':bias, 'Variance':variance})
+            # Average the error over catheters
             sum_all_caths = path_dct[main_path[0]] + path_dct[main_path[1]] + path_dct[main_path[2]]
             avg_all_caths = sum_all_caths / 3
             if seq == 'SRI_Original' and yloc.in_suffix == 'Y2':
@@ -143,6 +162,46 @@ for yloc in y_locations:
                     f.create_dataset(name, data=v)
 
 
+# # Comparisons across Sequences and Algorithms
+
+# In[6]:
+
+
+agg_df = pd.DataFrame(aggregate_data)
+
+
+# In[7]:
+
+
+agg_df
+
+
+# In[8]:
+
+
+# Missing recording for this combination!
+invalid_rows = agg_df[(agg_df['Y_Loc']=='Y2') & (agg_df['Sequence']=='SRI_Original') & (agg_df['Catheter']=='C306') & (agg_df['Grid_Loc']==2)].index
+
+
+# In[9]:
+
+
+agg_df = agg_df.drop(invalid_rows)
+
+
+# In[10]:
+
+
+agg_df  # each row contains the error (bias) and variance for one multi-second recording
+        # of one sequence, from one catheter, at one location, processed with one algorithm
+
+
+# In[ ]:
+
+
+
+
+
 # # HDF5 Exports
 # Error data has been saved to hdf5 (Hierarchical Data Format) files, one file for each sequence and algorithm combination. These can be read using your own code for further analysis, as shown in the code snippet below.
 # 
@@ -157,7 +216,7 @@ for yloc in y_locations:
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[5]:
+# In[11]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:
