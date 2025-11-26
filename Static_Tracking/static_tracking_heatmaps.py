@@ -3,7 +3,7 @@
 
 # # Imports
 
-# In[1]:
+# In[13]:
 
 
 import numpy as np 
@@ -17,7 +17,7 @@ import pandas as pd
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[2]:
+# In[14]:
 
 
 get_ipython().run_line_magic('pwd', '')
@@ -25,7 +25,7 @@ get_ipython().run_line_magic('pwd', '')
 
 # # Constants and Paths
 
-# In[3]:
+# In[15]:
 
 
 # Main data paths for each catheter (manually input)
@@ -81,7 +81,7 @@ Gt_filename = '1GroundTruthCoords.csv'
 geometry_index = 1
 
 
-# In[4]:
+# In[16]:
 
 
 def get_catheter_from_path(path):
@@ -95,7 +95,7 @@ def get_catheter_from_path(path):
 # 
 # For each sequence and localization algorithm of interest, plot the heatmap of average tip errors at each position. Each position has recordings from three catheters.
 
-# In[5]:
+# In[17]:
 
 
 sequences = ['SRI_Original', 'FH512_noDither_gradSpoiled']
@@ -113,12 +113,15 @@ for yloc in y_locations:
             # Aggregate
             for path in main_path: # path per catheter
                 cath_label = get_catheter_from_path(path)
+                coord_stats = path_dct[path][0]
+                coord_biases = path_dct[path][1]
                 for loc in range(16): # for each grid location
-                    bias = path_dct[path][loc][2]
-                    variance =  path_dct[path][loc][3]
-                    aggregate_data.append({'Y_Loc': yloc.in_suffix, 'Sequence':seq, 'Algorithm': alg, 'Catheter':cath_label,                              'Grid_Loc':loc+1, 'Bias':bias, 'Variance':variance})
+                    bias = coord_stats[loc][2]
+                    variance =  coord_stats[loc][3]
+                    count = coord_stats[loc][4]
+                    aggregate_data.append({'Y_Loc': yloc.in_suffix, 'Sequence':seq, 'Algorithm': alg, 'Catheter':cath_label,                              'Grid_Loc':loc+1, 'Mean_Bias':bias, 'Biases':coord_biases[loc], 'Variance':variance, 'Count':count})
             # Average the error over catheters
-            sum_all_caths = path_dct[main_path[0]] + path_dct[main_path[1]] + path_dct[main_path[2]]
+            sum_all_caths = path_dct[main_path[0]][0] + path_dct[main_path[1]][0] + path_dct[main_path[2]][0]
             avg_all_caths = sum_all_caths / 3
             if seq == 'SRI_Original' and yloc.in_suffix == 'Y2':
                 # A recording is missing - results in one invalid 0 mm error in the path_dct
@@ -159,47 +162,63 @@ for yloc in y_locations:
                 for k, v in path_dct.items():
                     expmt = pathlib.PurePath(k).parts[-1]
                     name = 'static_err_' + seq + '_' + alg + '_' + expmt
-                    f.create_dataset(name, data=v)
+                    f.create_dataset(name, data=v[0])
 
 
 # # Comparisons across Sequences and Algorithms
 
-# In[6]:
+# In[18]:
 
 
 agg_df = pd.DataFrame(aggregate_data)
 
 
-# In[7]:
+# In[19]:
 
 
 agg_df
+
+
+# In[21]:
+
+
+agg_df[agg_df['Count']==0] # Missed recording from a sequence at one grid location
 
 
 # In[8]:
 
 
 # Missing recording for this combination!
-invalid_rows = agg_df[(agg_df['Y_Loc']=='Y2') & (agg_df['Sequence']=='SRI_Original') & (agg_df['Catheter']=='C306') & (agg_df['Grid_Loc']==2)].index
+#invalid_rows = agg_df[(agg_df['Y_Loc']=='Y2') & (agg_df['Sequence']=='SRI_Original') & (agg_df['Catheter']=='C306') & (agg_df['Grid_Loc']==2)].index
 
 
-# In[9]:
+# In[22]:
 
 
-agg_df = agg_df.drop(invalid_rows)
+agg_df = agg_df.drop(agg_df[agg_df['Count']==0].index)
 
 
-# In[10]:
+# In[24]:
+
+
+agg_df[agg_df['Count']==0]
+
+
+# In[23]:
 
 
 agg_df  # each row contains the error (bias) and variance for one multi-second recording
         # of one sequence, from one catheter, at one location, processed with one algorithm
 
 
-# In[ ]:
+# ## JPNG vs CAP
+# # HM
+# Compare JPNG and CAP algorithms in the hadamard-multiplexed sequence
+
+# In[11]:
 
 
-
+hm_df = agg_df[agg_df['Sequence']=='FH512_noDither_gradSpoiled']
 
 
 # # HDF5 Exports
@@ -216,7 +235,7 @@ agg_df  # each row contains the error (bias) and variance for one multi-second r
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[11]:
+# In[12]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:

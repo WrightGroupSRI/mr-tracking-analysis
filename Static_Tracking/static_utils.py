@@ -41,6 +41,7 @@ def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_inde
     for path in main_path:
 
         coords = []
+        biases = []
 
         # Register every bias (16 in this case)
         for i in range(16):
@@ -79,19 +80,24 @@ def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_inde
             cathcoord_files = cathcoords.discover_files(curr_dir + algorithm + '/')
 
             if bool(cathcoord_files) == True:
-                distal_file = cathcoord_files[0][distal_index]    
+                distal_file = cathcoord_files[0][distal_index]
                 proximal_file = cathcoord_files[0][proximal_index]
+
+                bias_arr = metrics.get_bias_array(distal_file, proximal_file, tip_gt, geo)
+                count = len(bias_arr)
 
                 bias = metrics.Bias(distal_file, proximal_file, tip_gt, geo)
                 variance = cathcoords.get_tip_variance(distal_file, proximal_file, geo)
 
-                coords.append([tip_gt[0][0], tip_gt[0][2], bias, variance])
+                coords.append([tip_gt[0][0], tip_gt[0][2], bias, variance, count])
+                biases.append(bias_arr)
 
             else:
-                coords.append([tip_gt[0][0], tip_gt[0][2], 0, 0])
+                coords.append([tip_gt[0][0], tip_gt[0][2], 0, 0, 0])
+                biases.append([])
 
         coords = np.array(coords)
 
-        path_dct[path] = coords
+        path_dct[path] = (coords,biases)
     return path_dct
 
