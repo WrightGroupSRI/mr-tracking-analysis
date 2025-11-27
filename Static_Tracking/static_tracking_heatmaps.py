@@ -3,7 +3,7 @@
 
 # # Imports
 
-# In[13]:
+# In[1]:
 
 
 import numpy as np 
@@ -13,11 +13,12 @@ import h5py
 import static_utils
 import pathlib
 import pandas as pd
+from scipy import stats
 
 get_ipython().run_line_magic('matplotlib', 'inline')
 
 
-# In[14]:
+# In[2]:
 
 
 get_ipython().run_line_magic('pwd', '')
@@ -25,7 +26,7 @@ get_ipython().run_line_magic('pwd', '')
 
 # # Constants and Paths
 
-# In[15]:
+# In[3]:
 
 
 # Main data paths for each catheter (manually input)
@@ -81,7 +82,7 @@ Gt_filename = '1GroundTruthCoords.csv'
 geometry_index = 1
 
 
-# In[16]:
+# In[4]:
 
 
 def get_catheter_from_path(path):
@@ -95,7 +96,7 @@ def get_catheter_from_path(path):
 # 
 # For each sequence and localization algorithm of interest, plot the heatmap of average tip errors at each position. Each position has recordings from three catheters.
 
-# In[17]:
+# In[5]:
 
 
 sequences = ['SRI_Original', 'FH512_noDither_gradSpoiled']
@@ -167,44 +168,44 @@ for yloc in y_locations:
 
 # # Comparisons across Sequences and Algorithms
 
-# In[18]:
+# In[6]:
 
 
 agg_df = pd.DataFrame(aggregate_data)
 
 
-# In[19]:
+# In[7]:
 
 
 agg_df
 
 
-# In[21]:
+# In[8]:
 
 
 agg_df[agg_df['Count']==0] # Missed recording from a sequence at one grid location
 
 
-# In[8]:
+# In[9]:
 
 
 # Missing recording for this combination!
 #invalid_rows = agg_df[(agg_df['Y_Loc']=='Y2') & (agg_df['Sequence']=='SRI_Original') & (agg_df['Catheter']=='C306') & (agg_df['Grid_Loc']==2)].index
 
 
-# In[22]:
+# In[10]:
 
 
 agg_df = agg_df.drop(agg_df[agg_df['Count']==0].index)
 
 
-# In[24]:
+# In[11]:
 
 
 agg_df[agg_df['Count']==0]
 
 
-# In[23]:
+# In[12]:
 
 
 agg_df  # each row contains the error (bias) and variance for one multi-second recording
@@ -212,13 +213,171 @@ agg_df  # each row contains the error (bias) and variance for one multi-second r
 
 
 # ## JPNG vs CAP
-# # HM
+# ### HM
 # Compare JPNG and CAP algorithms in the hadamard-multiplexed sequence
 
-# In[11]:
+# In[13]:
 
 
 hm_df = agg_df[agg_df['Sequence']=='FH512_noDither_gradSpoiled']
+
+
+# In[14]:
+
+
+hm_cap_errors = hm_df[hm_df['Algorithm']=='centroid_around_peak']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[15]:
+
+
+hm_cap_errors
+
+
+# In[16]:
+
+
+hm_jpng_errors = hm_df[hm_df['Algorithm']=='jpng']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[17]:
+
+
+hm_jpng_errors
+
+
+# In[18]:
+
+
+np.isnan(hm_jpng_errors).sum() / len(hm_jpng_errors)
+
+
+# In[19]:
+
+
+np.array_equal(np.isnan(hm_jpng_errors),np.isnan(hm_cap_errors))
+
+
+# In[20]:
+
+
+# Later, check why there are NaNs in our tip error. For now, we know they match between the arrays, so remove them
+hm_cap_errors = hm_cap_errors[~np.isnan(hm_cap_errors)]
+hm_jpng_errors = hm_jpng_errors[~np.isnan(hm_jpng_errors)]
+
+
+# In[21]:
+
+
+len(hm_cap_errors)
+
+
+# In[22]:
+
+
+len(hm_jpng_errors)
+
+
+# In[23]:
+
+
+w, p = stats.wilcoxon(x=hm_jpng_errors,y=hm_cap_errors,alternative='less')
+
+
+# In[24]:
+
+
+p
+
+
+# In[25]:
+
+
+import sys
+sys.path.append('../')
+
+
+# In[26]:
+
+
+import Invivo_Tracking.displacement_utils as disp_utils
+
+
+# In[27]:
+
+
+plot, test = disp_utils.plot_displacement_boxplot([hm_cap_errors,hm_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=10, alternative='greater')
+print('Static Experiment HM Sequence: CAP vs JPNG Tip Error '+ test)
+plot.savefig('../reports/figures/static/HM-capVsJpng-tipErr.pdf',dpi=600)
+plot.show()
+
+
+# ### 3P Sequence
+# Compare JPNG and CAP algorithms in the three-projection sequence
+
+# In[28]:
+
+
+proj_df = agg_df[agg_df['Sequence']=='SRI_Original']
+
+
+# In[29]:
+
+
+proj_cap_errors = proj_df[proj_df['Algorithm']=='centroid_around_peak']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[30]:
+
+
+proj_jpng_errors = proj_df[proj_df['Algorithm']=='jpng']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[31]:
+
+
+proj_cap_errors
+
+
+# In[32]:
+
+
+np.isnan(proj_cap_errors).sum() / len(proj_cap_errors)
+
+
+# In[33]:
+
+
+np.array_equal(np.isnan(proj_cap_errors),np.isnan(proj_jpng_errors))
+
+
+# In[34]:
+
+
+# Later, check why there are NaNs in our tip error. For now, we know they match between the arrays, so remove them
+proj_cap_errors = proj_cap_errors[~np.isnan(proj_cap_errors)]
+proj_jpng_errors = proj_jpng_errors[~np.isnan(proj_jpng_errors)]
+
+
+# In[35]:
+
+
+w, p = stats.wilcoxon(x=proj_jpng_errors,y=proj_cap_errors,alternative='less')
+
+
+# In[36]:
+
+
+p
+
+
+# In[37]:
+
+
+plot, test = disp_utils.plot_displacement_boxplot([proj_cap_errors,proj_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, alternative='greater')
+print('Static Experiment 3P Sequence: CAP vs JPNG Tip Error '+ test)
+plot.savefig('../reports/figures/static/3P-capVsJpng-tipErr.pdf',dpi=600)
+plot.show()
 
 
 # # HDF5 Exports
@@ -235,7 +394,7 @@ hm_df = agg_df[agg_df['Sequence']=='FH512_noDither_gradSpoiled']
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[12]:
+# In[38]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:
