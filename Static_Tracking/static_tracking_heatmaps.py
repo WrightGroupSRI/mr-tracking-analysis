@@ -167,6 +167,19 @@ for yloc in y_locations:
 
 
 # # Comparisons across Sequences and Algorithms
+# We plan to compare tip errors from the JPNG and CAP peak-finding algorithms, for each sequence. Then we will compare tip errrors from both the HM & 3P sequences, with both JPNG and CAP algorithms. This will result in four comparisons, so we will use a Bonferroni adjustment for the p-value.
+
+# In[39]:
+
+
+p_val_adj = 0.05 / 4
+
+
+# In[40]:
+
+
+p_val_adj
+
 
 # In[6]:
 
@@ -303,10 +316,10 @@ sys.path.append('../')
 import Invivo_Tracking.displacement_utils as disp_utils
 
 
-# In[27]:
+# In[41]:
 
 
-plot, test = disp_utils.plot_displacement_boxplot([hm_cap_errors,hm_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=10, alternative='greater')
+plot, test = disp_utils.plot_displacement_boxplot([hm_cap_errors,hm_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=10, p_value=p_val_adj, alternative='greater')
 print('Static Experiment HM Sequence: CAP vs JPNG Tip Error '+ test)
 plot.savefig('../reports/figures/static/HM-capVsJpng-tipErr.pdf',dpi=600)
 plot.show()
@@ -371,13 +384,19 @@ w, p = stats.wilcoxon(x=proj_jpng_errors,y=proj_cap_errors,alternative='less')
 p
 
 
-# In[37]:
+# In[42]:
 
 
-plot, test = disp_utils.plot_displacement_boxplot([proj_cap_errors,proj_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, alternative='greater')
+plot, test = disp_utils.plot_displacement_boxplot([proj_cap_errors,proj_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, p_value=p_val_adj, alternative='greater')
 print('Static Experiment 3P Sequence: CAP vs JPNG Tip Error '+ test)
 plot.savefig('../reports/figures/static/3P-capVsJpng-tipErr.pdf',dpi=600)
 plot.show()
+
+
+# In[ ]:
+
+
+
 
 
 # # HDF5 Exports
