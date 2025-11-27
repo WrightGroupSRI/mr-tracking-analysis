@@ -112,13 +112,13 @@ def plot_displacement_boxplot(displacements, selected_algos = select_algos, show
     plot.minorticks_on()
     plot.grid(which='minor', alpha=0.3)
     max_y = 0
-    if show_scatter:
-        for i in range(len(selected_algos)):
-            if is_dict:
-                y = displacements[selected_algos[i]]
-            else:
-                y = displacements[i]
-            max_y = max(max_y, max(y))
+    for i in range(len(selected_algos)):
+        if is_dict:
+            y = displacements[selected_algos[i]]
+        else:
+            y = displacements[i]
+        max_y = max(max_y, max(y))
+        if show_scatter:
             x = np.random.normal(i+1,0.03,size=len(y))
             plot.plot(x, y, 'r.', alpha=0.4)
     if (len(selected_algos) == 2):
