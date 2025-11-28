@@ -169,56 +169,56 @@ for yloc in y_locations:
 # # Comparisons across Sequences and Algorithms
 # We plan to compare tip errors from the JPNG and CAP peak-finding algorithms, for each sequence. Then we will compare tip errrors from both the HM & 3P sequences, with both JPNG and CAP algorithms. This will result in four comparisons, so we will use a Bonferroni adjustment for the p-value.
 
-# In[39]:
+# In[6]:
 
 
 p_val_adj = 0.05 / 4
 
 
-# In[40]:
+# In[7]:
 
 
 p_val_adj
 
 
-# In[6]:
+# In[8]:
 
 
 agg_df = pd.DataFrame(aggregate_data)
 
 
-# In[7]:
+# In[9]:
 
 
 agg_df
 
 
-# In[8]:
+# In[10]:
 
 
 agg_df[agg_df['Count']==0] # Missed recording from a sequence at one grid location
 
 
-# In[9]:
+# In[11]:
 
 
 # Missing recording for this combination!
 #invalid_rows = agg_df[(agg_df['Y_Loc']=='Y2') & (agg_df['Sequence']=='SRI_Original') & (agg_df['Catheter']=='C306') & (agg_df['Grid_Loc']==2)].index
 
 
-# In[10]:
+# In[12]:
 
 
 agg_df = agg_df.drop(agg_df[agg_df['Count']==0].index)
 
 
-# In[11]:
+# In[13]:
 
 
 agg_df[agg_df['Count']==0]
 
 
-# In[12]:
+# In[14]:
 
 
 agg_df  # each row contains the error (bias) and variance for one multi-second recording
@@ -229,94 +229,95 @@ agg_df  # each row contains the error (bias) and variance for one multi-second r
 # ### HM
 # Compare JPNG and CAP algorithms in the hadamard-multiplexed sequence
 
-# In[13]:
+# In[15]:
 
 
 hm_df = agg_df[agg_df['Sequence']=='FH512_noDither_gradSpoiled']
 
 
-# In[14]:
+# In[16]:
 
 
 hm_cap_errors = hm_df[hm_df['Algorithm']=='centroid_around_peak']['Biases'].apply(pd.Series).values.ravel()
 
 
-# In[15]:
+# In[17]:
 
 
 hm_cap_errors
 
 
-# In[16]:
+# In[18]:
 
 
 hm_jpng_errors = hm_df[hm_df['Algorithm']=='jpng']['Biases'].apply(pd.Series).values.ravel()
 
 
-# In[17]:
+# In[19]:
 
 
 hm_jpng_errors
 
 
-# In[18]:
+# In[20]:
 
 
 np.isnan(hm_jpng_errors).sum() / len(hm_jpng_errors)
 
 
-# In[19]:
+# In[21]:
 
 
 np.array_equal(np.isnan(hm_jpng_errors),np.isnan(hm_cap_errors))
 
 
-# In[20]:
-
-
-# Later, check why there are NaNs in our tip error. For now, we know they match between the arrays, so remove them
-hm_cap_errors = hm_cap_errors[~np.isnan(hm_cap_errors)]
-hm_jpng_errors = hm_jpng_errors[~np.isnan(hm_jpng_errors)]
-
-
-# In[21]:
-
-
-len(hm_cap_errors)
-
-
 # In[22]:
 
 
-len(hm_jpng_errors)
+# NaNs in our tip error are likely due to recordings for multiple coils finishing at slightly different times
+# They match between the arrays, so remove them
+hm_cap_errors = hm_cap_errors[~np.isnan(hm_cap_errors)]
+hm_jpng_errors = hm_jpng_errors[~np.isnan(hm_jpng_errors)]
 
 
 # In[23]:
 
 
-w, p = stats.wilcoxon(x=hm_jpng_errors,y=hm_cap_errors,alternative='less')
+len(hm_cap_errors)
 
 
 # In[24]:
 
 
-p
+len(hm_jpng_errors)
 
 
 # In[25]:
+
+
+w, p = stats.wilcoxon(x=hm_jpng_errors,y=hm_cap_errors,alternative='less')
+
+
+# In[26]:
+
+
+p
+
+
+# In[27]:
 
 
 import sys
 sys.path.append('../')
 
 
-# In[26]:
+# In[28]:
 
 
 import Invivo_Tracking.displacement_utils as disp_utils
 
 
-# In[41]:
+# In[29]:
 
 
 plot, test = disp_utils.plot_displacement_boxplot([hm_cap_errors,hm_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=10, p_value=p_val_adj, alternative='greater')
@@ -328,63 +329,64 @@ plot.show()
 # ### 3P Sequence
 # Compare JPNG and CAP algorithms in the three-projection sequence
 
-# In[28]:
+# In[30]:
 
 
 proj_df = agg_df[agg_df['Sequence']=='SRI_Original']
 
 
-# In[29]:
+# In[31]:
 
 
 proj_cap_errors = proj_df[proj_df['Algorithm']=='centroid_around_peak']['Biases'].apply(pd.Series).values.ravel()
 
 
-# In[30]:
+# In[32]:
 
 
 proj_jpng_errors = proj_df[proj_df['Algorithm']=='jpng']['Biases'].apply(pd.Series).values.ravel()
 
 
-# In[31]:
+# In[33]:
 
 
 proj_cap_errors
 
 
-# In[32]:
+# In[34]:
 
 
 np.isnan(proj_cap_errors).sum() / len(proj_cap_errors)
 
 
-# In[33]:
+# In[35]:
 
 
 np.array_equal(np.isnan(proj_cap_errors),np.isnan(proj_jpng_errors))
 
 
-# In[34]:
+# In[36]:
 
 
-# Later, check why there are NaNs in our tip error. For now, we know they match between the arrays, so remove them
+# NaNs in our tip error are likely due to recordings for multiple coils finishing at slightly different times
+# They match between the arrays, so remove them
 proj_cap_errors = proj_cap_errors[~np.isnan(proj_cap_errors)]
 proj_jpng_errors = proj_jpng_errors[~np.isnan(proj_jpng_errors)]
 
 
-# In[35]:
+# In[37]:
 
 
 w, p = stats.wilcoxon(x=proj_jpng_errors,y=proj_cap_errors,alternative='less')
 
 
-# In[36]:
+# In[38]:
 
 
 p
 
 
-# In[42]:
+# In[39]:
 
 
 plot, test = disp_utils.plot_displacement_boxplot([proj_cap_errors,proj_jpng_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, p_value=p_val_adj, alternative='greater')
@@ -393,10 +395,175 @@ plot.savefig('../reports/figures/static/3P-capVsJpng-tipErr.pdf',dpi=600)
 plot.show()
 
 
-# In[ ]:
+# ## HM vs 3P
+# ### JPNG
+# Compare tip errors from hadamard and three-projection sequences for JPNG algorithm.
+
+# In[40]:
 
 
+jpng_df = agg_df[agg_df['Algorithm']=='jpng']
 
+
+# In[41]:
+
+
+jpng_HM_errors = jpng_df[jpng_df['Sequence']=='FH512_noDither_gradSpoiled']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[42]:
+
+
+jpng_3P_errors = jpng_df[jpng_df['Sequence']=='SRI_Original']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[43]:
+
+
+jpng_HM_errors
+
+
+# In[44]:
+
+
+np.isnan(jpng_HM_errors).sum() / len(jpng_HM_errors)
+
+
+# In[45]:
+
+
+np.array_equal(np.isnan(jpng_HM_errors),np.isnan(jpng_3P_errors))
+
+
+# In[46]:
+
+
+jpng_HM_errors = jpng_HM_errors[~np.isnan(jpng_HM_errors)]
+jpng_3P_errors = jpng_3P_errors[~np.isnan(jpng_3P_errors)]
+
+
+# In[47]:
+
+
+len(jpng_HM_errors)
+
+
+# In[48]:
+
+
+len(jpng_3P_errors)
+
+
+# In[49]:
+
+
+import seaborn as sns
+
+
+# In[50]:
+
+
+sns.violinplot(data=[jpng_3P_errors, jpng_HM_errors],orient='v')
+
+
+# In[51]:
+
+
+u, p = stats.mannwhitneyu(jpng_HM_errors,jpng_3P_errors,alternative='less')
+
+
+# In[52]:
+
+
+p
+
+
+# In[53]:
+
+
+ax = sns.boxplot(data=[jpng_3P_errors,jpng_HM_errors],orient='v',showmeans=True)
+print('Static Experiment JPNG Algorithm: 3P and HM Tip Error')
+max_y = max(np.max(jpng_3P_errors),np.max(jpng_HM_errors))
+if p < p_val_adj: # draw a significance line
+    star_str = disp_utils.get_p_stars(p)
+    starline_y = max_y
+    ax.plot([0, 0, 1, 1], [starline_y+0.2, starline_y+0.4, starline_y+0.4, starline_y+0.2], linewidth=1, color='grey')
+    ax.text(0.49, starline_y+0.5, star_str, ha='center', fontsize=12)
+ax.set_title('JPNG Algorithm: 3P and HM Tip Error')
+ax.set_xticklabels(['3P','HM'])
+plt.savefig('../reports/figures/static/JPNG-3PvsHM-boxplot.pdf',dpi=600)
+plt.show()
+
+
+# ## CAP
+# Compare tip errors from hadamard and three-projection sequences for the centroid-around-peak algorithm.
+
+# In[54]:
+
+
+cap_df = agg_df[agg_df['Algorithm']=='centroid_around_peak']
+cap_HM_errors = cap_df[cap_df['Sequence']=='FH512_noDither_gradSpoiled']['Biases'].apply(pd.Series).values.ravel()
+cap_3P_errors = cap_df[cap_df['Sequence']=='SRI_Original']['Biases'].apply(pd.Series).values.ravel()
+
+
+# In[55]:
+
+
+np.isnan(cap_3P_errors).sum() / len(cap_3P_errors)
+
+
+# In[56]:
+
+
+cap_HM_errors = cap_HM_errors[~np.isnan(cap_HM_errors)]
+cap_3P_errors = cap_3P_errors[~np.isnan(cap_3P_errors)]
+
+
+# In[57]:
+
+
+len(cap_HM_errors)
+
+
+# In[58]:
+
+
+len(cap_3P_errors)
+
+
+# In[59]:
+
+
+sns.violinplot(data=[cap_3P_errors, cap_HM_errors],orient='v')
+
+
+# In[60]:
+
+
+u, p = stats.mannwhitneyu(cap_HM_errors,cap_3P_errors,alternative='less')
+
+
+# In[61]:
+
+
+p
+
+
+# In[62]:
+
+
+ax = sns.boxplot(data=[cap_3P_errors,cap_HM_errors],orient='v',showmeans=True)
+print('Static Experiment CAP Algorithm: 3P and HM Tip Error')
+max_y = max(np.max(cap_3P_errors),np.max(cap_HM_errors))
+if p < p_val_adj: # draw a significance line
+    star_str = disp_utils.get_p_stars(p)
+    starline_y = max_y
+    ax.plot([0, 0, 1, 1], [starline_y+0.2, starline_y+0.4, starline_y+0.4, starline_y+0.2], linewidth=1, color='grey')
+    ax.text(0.49, starline_y+0.5, star_str, ha='center', fontsize=12)
+ax.set_title('CAP Algorithm: 3P and HM Tip Error')
+ax.set_xticklabels(['3P','HM'])
+plt.savefig('../reports/figures/static/CAP-3PvsHM-boxplot.pdf',dpi=600)
+plt.show()
 
 
 # # HDF5 Exports
@@ -413,7 +580,7 @@ plot.show()
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[38]:
+# In[63]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:
