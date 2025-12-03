@@ -85,6 +85,24 @@ c.FileContentsManager.post_save_hook = post_save
 EOF
 
 USER root
+# Install MatchHostFsOwner: this will change the container user permissions
+# to match those of the host user running the container, at runtime
+# This will allow writing output files to a user mount, if desired
+# See https://github.com/FooBarWidget/matchhostfsowner/releases
+ADD https://github.com/FooBarWidget/matchhostfsowner/releases/download/v1.0.1/matchhostfsowner-1.0.1-x86_64-linux.gz /sbin/matchhostfsowner.gz
+RUN gunzip /sbin/matchhostfsowner.gz && \
+  chown root: /sbin/matchhostfsowner && \
+  chmod +x,+s /sbin/matchhostfsowner
+
+COPY <<EOF /etc/matchhostfsowner/config.yml
+app_account: mambauser
+app_group: mambauser
+EOF
+
+RUN chown -R root: /etc/matchhostfsowner && \
+    chmod 700 /etc/matchhostfsowner && \
+    chmod 600 /etc/matchhostfsowner/*
+
 RUN mkdir /data
 RUN ln -s /home/$MAMBA_USER /code
 RUN chown -R $MAMBA_USER:$MAMBA_USER /code /home/$MAMBA_USER/.jupyter /data
@@ -93,3 +111,5 @@ USER $MAMBA_USER
 COPY --chown=$MAMBA_USER:$MAMBA_USER . /home/$MAMBA_USER/
 ENV PATH="${PATH}:/home/$MAMBA_USER/.local/bin/"
 WORKDIR /code
+
+ENTRYPOINT ["/sbin/matchhostfsowner","/usr/local/bin/_entrypoint.sh"]
