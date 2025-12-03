@@ -590,7 +590,19 @@ u, p = stats.mannwhitneyu(jpng_HM_errors,jpng_3P_errors,alternative='less')
 p
 
 
-# In[65]:
+# In[95]:
+
+
+w, p = stats.wilcoxon(x=jpng_HM_errors,y=jpng_3P_errors,alternative='less')
+
+
+# In[96]:
+
+
+p
+
+
+# In[97]:
 
 
 ax = sns.boxplot(data=[jpng_3P_errors,jpng_HM_errors],orient='v',showmeans=True)
@@ -605,27 +617,6 @@ ax.set_title('JPNG Algorithm: 3P and HM Tip Error')
 ax.set_xticklabels(['3P','HM'])
 plt.savefig('../reports/figures/static/JPNG-3PvsHM-boxplot.pdf',dpi=600)
 plt.show()
-
-
-# In[66]:
-
-
-w, p = stats.wilcoxon(x=jpng_HM_errors,y=jpng_3P_errors,alternative='less')
-
-
-# In[67]:
-
-
-p
-
-
-# In[68]:
-
-
-plot, test = disp_utils.plot_displacement_boxplot([jpng_3P_errors,jpng_HM_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, p_value=p_val_adj, alternative='greater')
-print('Static Experiment JPNG: 3P and HM Sequences Tip Error '+ test)
-plot.savefig('../reports/figures/static/JPNG-3PvsHM-boxplot-wilcoxon.pdf',dpi=600)
-plot.show()
 
 
 # ## CAP
@@ -763,7 +754,19 @@ u, p = stats.mannwhitneyu(cap_HM_errors,cap_3P_errors,alternative='less')
 p
 
 
-# In[90]:
+# In[98]:
+
+
+w, p = stats.wilcoxon(x=cap_HM_errors,y=cap_3P_errors,alternative='less')
+
+
+# In[99]:
+
+
+p
+
+
+# In[100]:
 
 
 ax = sns.boxplot(data=[cap_3P_errors,cap_HM_errors],orient='v',showmeans=True)
@@ -778,27 +781,6 @@ ax.set_title('CAP Algorithm: 3P and HM Tip Error')
 ax.set_xticklabels(['3P','HM'])
 plt.savefig('../reports/figures/static/CAP-3PvsHM-boxplot.pdf',dpi=600)
 plt.show()
-
-
-# In[91]:
-
-
-w, p = stats.wilcoxon(x=cap_HM_errors,y=cap_3P_errors,alternative='less')
-
-
-# In[92]:
-
-
-p
-
-
-# In[93]:
-
-
-plot, test = disp_utils.plot_displacement_boxplot([cap_3P_errors,cap_HM_errors], show_scatter=False,                                                  y_label='Tip Error',set_ymax=14, p_value=p_val_adj, alternative='greater')
-print('Static Experiment CAP: 3P and HM Sequences Tip Error '+ test)
-plot.savefig('../reports/figures/static/CAP-3PvsHM-boxplot-wilcoxon.pdf',dpi=600)
-plot.show()
 
 
 # # HDF5 Exports
