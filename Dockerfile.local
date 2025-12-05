@@ -6,31 +6,21 @@
 # 1. export DOCKER_BUILDKIT=1
 #
 # Then build the image with:
-# docker build -t mr-tracking:x.y .
+# docker build -t mr-tracking-loc:x.y .
+#
+# This image is set up to optionally write to a mount on the
+# host, instead of running on binder
 #
 # To run the analysis:
 # 1. From the terminal:
-#    docker run --rm -p 8888:8888 mr-tracking:latest jupyter notebook --ip 0.0.0.0 --no-browser
+#    docker run --user "$(id -u):$(id -g)" -v /my/path/out:/reports --rm -p 8888:8888 mr-tracking-loc:latest jupyter notebook --ip 0.0.0.0 --no-browser
 # 2. Open the 127.0.0.1 link shown in the terminal in your web browser 
 # 3. Open and run RunAnalysis.ipynb from the jupyter interface
 ################################################
 
 FROM mambaorg/micromamba:1.5.8-alpine3.20
 
-ARG NEW_MAMBA_USER_ID=1000 # User ID required to run on binder
-ARG NEW_MAMBA_USER_GID=1000
 USER root
-
-RUN if grep -q '^ID=alpine$' /etc/os-release; then \
-      # alpine does not have usermod/groupmod
-      apk add --no-cache --virtual temp-packages shadow; \
-    fi && \
-    usermod "-u ${NEW_MAMBA_USER_ID}" "${MAMBA_USER}" && \
-    groupmod "-g ${NEW_MAMBA_USER_GID}" "${MAMBA_USER}" && \
-    if grep -q '^ID=alpine$' /etc/os-release; then \
-      # remove the packages that were only needed for usermod/groupmod
-      apk del temp-packages; \
-    fi
 
 COPY --chown=$MAMBA_USER:$MAMBA_USER env.yaml /tmp/env.yaml
 RUN micromamba install -y -n base -f /tmp/env.yaml && \
