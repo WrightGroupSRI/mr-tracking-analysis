@@ -103,11 +103,11 @@ def get_catheter_from_path(path):
 sequences = ['SRI_Original', 'FH512_noDither_gradSpoiled']
 algorithms = ['centroid_around_peak', 'jpng']
 aggregate_data = []
+aggregate_plot = []
 
 os.makedirs(error_path, exist_ok=True)
 
 for yloc in y_locations:
-    print(f'Error heatmaps for {yloc.description}')
     for seq in sequences:
         for alg in algorithms:
             main_path = main_paths[yloc.in_suffix]
@@ -122,49 +122,61 @@ for yloc in y_locations:
                     variance =  coord_stats[loc][3]
                     count = coord_stats[loc][4]
                     aggregate_data.append({'Y_Loc': yloc.in_suffix, 'Sequence':seq, 'Algorithm': alg, 'Catheter':cath_label,                              'Grid_Loc':loc+1, 'Mean_Bias':bias, 'Biases':coord_biases[loc], 'Variance':variance, 'Count':count})
-            # Average the error over catheters
-            sum_all_caths = path_dct[main_path[0]][0] + path_dct[main_path[1]][0] + path_dct[main_path[2]][0]
-            avg_all_caths = sum_all_caths / 3
-            if seq == 'SRI_Original' and yloc.in_suffix == 'Y2':
-                # A recording is missing - results in one invalid 0 mm error in the path_dct
-                print(f'Adjusting for missing recording for {seq}, {alg}, {yloc.in_suffix}')
-                avg_all_caths[1, 2] = avg_all_caths[1, 2] * 3/2.0 # recover total sum, then divide by 2 for mean
-            avg_err = avg_all_caths[:, 2]
-            stddev = np.sqrt(sum_all_caths[:, 3])
+            aggregate_plot.append({'Y_Loc': yloc, 'Sequence':seq, 'Algorithm': alg, 'Path_Dict':path_dct})
+
+# TO DO: Recording lengths do not match: crop to the first 5 seconds
+
+# Display heatmap error plots
+for plot_combination in aggregate_plot:
+    yloc = plot_combination['Y_Loc']
+    print(f'Error heatmaps for {yloc.description}')
+    seq = plot_combination['Sequence']
+    alg = plot_combination['Algorithm']
+    path_dct = plot_combination['Path_Dict']
+    main_path = main_paths[yloc.in_suffix]
+    # Average the error over catheters
+    sum_all_caths = path_dct[main_path[0]][0] + path_dct[main_path[1]][0] + path_dct[main_path[2]][0]
+    avg_all_caths = sum_all_caths / 3
+    if seq == 'SRI_Original' and yloc.in_suffix == 'Y2':
+        # A recording is missing - results in one invalid 0 mm error in the path_dct
+        print(f'Adjusting for missing recording for {seq}, {alg}, {yloc.in_suffix}')
+        avg_all_caths[1, 2] = avg_all_caths[1, 2] * 3/2.0 # recover total sum, then divide by 2 for mean
+    avg_err = avg_all_caths[:, 2]
+    stddev = np.sqrt(sum_all_caths[:, 3])
 
 
-            my_data = np.array([avg_all_caths[:, 0], avg_all_caths[:, 1], avg_err]).T
+    my_data = np.array([avg_all_caths[:, 0], avg_all_caths[:, 1], avg_err]).T
 
-            X = my_data[:, 0]
-            Y = my_data[:, 1]
-            Z = my_data[:, 2]
+    X = my_data[:, 0]
+    Y = my_data[:, 1]
+    Z = my_data[:, 2]
 
-            heatmap = static_utils.nonuniform_imshow(X, Y, Z, stddev, numeric=True)
-            plt.gca().invert_yaxis()
-            plt.xlabel('X-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
-            plt.ylabel('Z-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
-            plt.xticks(fontsize = 18)
-            plt.yticks(fontsize = 18)
-            print('Tip Tracking Error @ {2} sequence {0}, algorithm {1}'.format(seq, alg, yloc.description))
-            cbar = plt.colorbar(heatmap)
-            cbar.ax.set_yticklabels(['0', '1', '2', '3', '4', '\u2265' + '5'])
-            cbar.ax.get_yaxis().labelpad = 30
-            cbar.ax.tick_params(labelsize = 18)
-            cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 20, fontweight = 'bold')
+    heatmap = static_utils.nonuniform_imshow(X, Y, Z, stddev, numeric=True)
+    plt.gca().invert_yaxis()
+    plt.xlabel('X-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+    plt.ylabel('Z-Position (mm from isocentre)', fontsize = 20, fontweight = 'bold', labelpad = 10)
+    plt.xticks(fontsize = 18)
+    plt.yticks(fontsize = 18)
+    print('Tip Tracking Error @ {2} sequence {0}, algorithm {1}'.format(seq, alg, yloc.description))
+    cbar = plt.colorbar(heatmap)
+    cbar.ax.set_yticklabels(['0', '1', '2', '3', '4', '\u2265' + '5'])
+    cbar.ax.get_yaxis().labelpad = 30
+    cbar.ax.tick_params(labelsize = 18)
+    cbar.ax.set_ylabel('Error (mm)', rotation = 270, fontsize = 20, fontweight = 'bold')
 
-            if not os.path.isdir('{0}'.format(heatmap_paths[yloc.in_suffix])):
-                os.makedirs('{0}'.format(heatmap_paths[yloc.in_suffix]))
+    if not os.path.isdir('{0}'.format(heatmap_paths[yloc.in_suffix])):
+        os.makedirs('{0}'.format(heatmap_paths[yloc.in_suffix]))
 
-            plt.savefig('{0}{1}_{2}_heatmap.png'.format(heatmap_paths[yloc.in_suffix], seq, alg), dpi=300)
-            plt.show()
-            # Below we save the tip errors from each catheter to hdf5 format
-            h5out = '{0}{3}_{1}_{2}.h5'.format(error_path, seq, alg, yloc.in_suffix)
-            with h5py.File(h5out, 'w', libver='latest') as f:
-                print("Saving error data from each catheter to: " + h5out)
-                for k, v in path_dct.items():
-                    expmt = pathlib.PurePath(k).parts[-1]
-                    name = 'static_err_' + seq + '_' + alg + '_' + expmt
-                    f.create_dataset(name, data=v[0])
+    plt.savefig('{0}{1}_{2}_heatmap.png'.format(heatmap_paths[yloc.in_suffix], seq, alg), dpi=300)
+    plt.show()
+    # Below we save the tip errors from each catheter to hdf5 format
+    h5out = '{0}{3}_{1}_{2}.h5'.format(error_path, seq, alg, yloc.in_suffix)
+    with h5py.File(h5out, 'w', libver='latest') as f:
+        print("Saving error data from each catheter to: " + h5out)
+        for k, v in path_dct.items():
+            expmt = pathlib.PurePath(k).parts[-1]
+            name = 'static_err_' + seq + '_' + alg + '_' + expmt
+            f.create_dataset(name, data=v[0])
 
 
 # # Comparisons across Sequences and Algorithms
