@@ -34,7 +34,7 @@ def nonuniform_imshow(x, y, z, stddev=[], numeric=False, aspect = 1, cmap = plt.
 
     return hm
 
-def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_index=1):
+def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_index=1, max_samples=-1):
     # Get ground truth and error data for each catheter
     path_dct = {}
 
@@ -86,8 +86,8 @@ def get_catheter_data(main_path, sequence, algorithm, gt_filename, geometry_inde
                 bias_arr = metrics.get_bias_array(distal_file, proximal_file, tip_gt, geo)
                 count = len(bias_arr)
 
-                bias = metrics.Bias(distal_file, proximal_file, tip_gt, geo)
-                variance = cathcoords.get_tip_variance(distal_file, proximal_file, geo)
+                bias = metrics.Bias(distal_file, proximal_file, tip_gt, geo, max_samples)
+                variance = cathcoords.get_tip_variance(distal_file, proximal_file, geo, max_samples=max_samples)
 
                 coords.append([tip_gt[0][0], tip_gt[0][2], bias, variance, count])
                 biases.append(bias_arr)

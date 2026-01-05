@@ -82,6 +82,8 @@ Gt_filename = '1GroundTruthCoords.csv'
 
 geometry_index = 1
 
+max_samples = 170
+
 
 # In[4]:
 
@@ -150,7 +152,7 @@ for yloc in y_locations:
     for seq in sequences:
         for alg in algorithms:
             main_path = main_paths[yloc.in_suffix]
-            path_dct = static_utils.get_catheter_data(main_path, seq, alg, Gt_filename, geometry_index)
+            path_dct = static_utils.get_catheter_data(main_path, seq, alg, Gt_filename, geometry_index, max_samples)
             # Aggregate
             for path in main_path: # path per catheter
                 cath_label = get_catheter_from_path(path)
@@ -263,6 +265,7 @@ bias_grid.values
 # In[22]:
 
 
+# Note this uses a different method to get the mean bias: use the subsequent code
 for yloc in y_locations:
     print(f'Error heatmaps for {yloc.description}')
     for seq in sequences:
@@ -336,7 +339,6 @@ for plot_combination in aggregate_plot:
         avg_all_caths[1, 2] = avg_all_caths[1, 2] * 3/2.0 # recover total sum, then divide by 2 for mean
     avg_err = avg_all_caths[:, 2]
     stddev = np.sqrt(sum_all_caths[:, 3])
-
 
     my_data = np.array([avg_all_caths[:, 0], avg_all_caths[:, 1], avg_err]).T
 
@@ -984,7 +986,7 @@ plt.show()
 
 
 # #### JPNG: compare the means 
-# Compare mean tip errors from hadamard and three-projection sequences for JPNG algorithm: get the means from each 3d grid location, from all catheters, using the means of the Biases_Crop columns (to ensure the same number of samples are used)
+# Compare mean tip errors from hadamard and three-projection sequences for JPNG algorithm: get the means from each 3d grid location, from all catheters, using Mean_Bias
 
 # In[110]:
 
@@ -993,8 +995,8 @@ jpng_3P_mean_errors = []
 jpng_HM_mean_errors = []
 for y in y_locs:
     for g in grid_locs:
-        proj_biases = jpng_df[(jpng_df['Sequence']=='SRI_Original') & (jpng_df['Y_Loc']==y) & (jpng_df['Grid_Loc']==g)]['Biases_Crop'].apply(pd.Series).values.ravel()
-        hm_biases = jpng_df[(jpng_df['Sequence']=='FH512_noDither_gradSpoiled') & (jpng_df['Y_Loc']==y) & (jpng_df['Grid_Loc']==g)]['Biases_Crop'].apply(pd.Series).values.ravel()
+        proj_biases = jpng_df[(jpng_df['Sequence']=='SRI_Original') & (jpng_df['Y_Loc']==y) & (jpng_df['Grid_Loc']==g)]['Mean_Bias'].ravel()
+        hm_biases = jpng_df[(jpng_df['Sequence']=='FH512_noDither_gradSpoiled') & (jpng_df['Y_Loc']==y) & (jpng_df['Grid_Loc']==g)]['Mean_Bias'].ravel()
         proj_biases = proj_biases[~np.isnan(proj_biases)]
         hm_biases = hm_biases[~np.isnan(hm_biases)]
         jpng_3P_mean_errors.append(np.mean(proj_biases))
@@ -1004,46 +1006,52 @@ for y in y_locs:
 # In[111]:
 
 
-np.mean(jpng_3P_mean_errors)
+len(jpng_3P_mean_errors)
 
 
 # In[112]:
 
 
-np.std(jpng_3P_mean_errors)
+np.mean(jpng_3P_mean_errors)
 
 
 # In[113]:
 
 
-np.mean(jpng_HM_mean_errors)
+np.std(jpng_3P_mean_errors)
 
 
 # In[114]:
 
 
-np.std(jpng_HM_mean_errors)
+np.mean(jpng_HM_mean_errors)
 
 
 # In[115]:
 
 
-w, p = stats.wilcoxon(x=jpng_HM_mean_errors,y=jpng_3P_mean_errors,alternative='less')
+np.std(jpng_HM_mean_errors)
 
 
 # In[116]:
 
 
-p
+w, p = stats.wilcoxon(x=jpng_HM_mean_errors,y=jpng_3P_mean_errors,alternative='less')
 
 
 # In[117]:
 
 
-p_val_adj
+p
 
 
 # In[118]:
+
+
+p_val_adj
+
+
+# In[119]:
 
 
 ax = sns.boxplot(data=[jpng_3P_mean_errors,jpng_HM_mean_errors],orient='v',showmeans=True)
@@ -1063,119 +1071,119 @@ plt.show()
 # ## CAP
 # Compare tip errors from hadamard and three-projection sequences for the centroid-around-peak algorithm.
 
-# In[119]:
+# In[120]:
 
 
 cap_df = agg_df[agg_df['Algorithm']=='centroid_around_peak'].copy()
 
 
-# In[120]:
+# In[121]:
 
 
 missing_match = cap_df[(cap_df['Y_Loc']=='Y2') & (cap_df['Sequence']=='FH512_noDither_gradSpoiled') &                        (cap_df['Catheter']=='C306') & (cap_df['Grid_Loc']==2)].index
 
 
-# In[121]:
+# In[122]:
 
 
 # drop the hm recording that doesn't have a matching 3p recording
 cap_df = cap_df.drop(missing_match)
 
 
-# In[122]:
+# In[123]:
 
 
 cap_df['Biases_Crop'] = cap_df['Biases'] # Will crop this bias list to the smaller sample size
 
 
-# In[123]:
+# In[124]:
 
 
 nan_tails = cap_df.apply(lambda x: check_nans(x['Biases']), axis=1) # check if all the NaNs are in the tails
 
 
-# In[124]:
+# In[125]:
 
 
 np.all(nan_tails)
 
 
-# In[125]:
+# In[126]:
 
 
 cap_df['Biases_Crop'] = cap_df.apply(lambda x: crop_tails(x['Biases']),axis=1) # crop off the NaNs
 
 
-# In[126]:
+# In[127]:
 
 
 # Match sample size between sequences
 cap_df['Biases_Crop'] = cap_df.apply(lambda x: x['Biases_Crop'] if x['Sequence'] != 'SRI_Original' else                                        crop_bias_list(x['Biases_Crop'], x['Y_Loc'], x['Grid_Loc'],                                                       x['Catheter'],'FH512_noDither_gradSpoiled', cap_df),                                        axis=1)
 
 
-# In[127]:
+# In[128]:
 
 
 cap_HM_errors = cap_df[cap_df['Sequence']=='FH512_noDither_gradSpoiled']['Biases_Crop'].apply(pd.Series).values.ravel()
 cap_3P_errors = cap_df[cap_df['Sequence']=='SRI_Original']['Biases_Crop'].apply(pd.Series).values.ravel()
 
 
-# In[128]:
+# In[129]:
 
 
 len(cap_HM_errors)
 
 
-# In[129]:
+# In[130]:
 
 
 len(cap_3P_errors)
 
 
-# In[130]:
+# In[131]:
 
 
 np.isnan(cap_HM_errors).sum()
 
 
-# In[131]:
+# In[132]:
 
 
 np.isnan(cap_3P_errors).sum()
 
 
-# In[132]:
+# In[133]:
 
 
 np.isnan(cap_3P_errors).sum() / len(cap_3P_errors)
 
 
-# In[133]:
+# In[134]:
 
 
 np.array_equal(np.isnan(cap_HM_errors),np.isnan(cap_3P_errors))
 
 
-# In[134]:
+# In[135]:
 
 
 cap_HM_errors = cap_HM_errors[~np.isnan(cap_HM_errors)]
 cap_3P_errors = cap_3P_errors[~np.isnan(cap_3P_errors)]
 
 
-# In[135]:
+# In[136]:
 
 
 len(cap_HM_errors)
 
 
-# In[136]:
+# In[137]:
 
 
 len(cap_3P_errors)
 
 
-# In[137]:
+# In[138]:
 
 
 sns.violinplot(data=[cap_3P_errors, cap_HM_errors],orient='v')
@@ -1183,31 +1191,31 @@ sns.violinplot(data=[cap_3P_errors, cap_HM_errors],orient='v')
 
 # Mann Whitney U test for independent measures: skip this and go to Wilcoxon test since our samples are now paired
 
-# In[138]:
+# In[139]:
 
 
 u, p = stats.mannwhitneyu(cap_HM_errors,cap_3P_errors,alternative='less')
 
 
-# In[139]:
-
-
-p
-
-
 # In[140]:
 
 
-w, p = stats.wilcoxon(x=cap_HM_errors,y=cap_3P_errors,alternative='less')
+p
 
 
 # In[141]:
 
 
-p
+w, p = stats.wilcoxon(x=cap_HM_errors,y=cap_3P_errors,alternative='less')
 
 
 # In[142]:
+
+
+p
+
+
+# In[143]:
 
 
 ax = sns.boxplot(data=[cap_3P_errors,cap_HM_errors],orient='v',showmeans=True)
@@ -1227,58 +1235,58 @@ plt.show()
 # #### CAP: compare the means 
 # Compare mean tip errors from hadamard and three-projection sequences for CAP algorithm: get the means from each 3d grid location, from all catheters, using the means of the Biases_Crop columns (to ensure the same number of samples are used)
 
-# In[143]:
+# In[144]:
 
 
 cap_3P_mean_errors = []
 cap_HM_mean_errors = []
 for y in y_locs:
     for g in grid_locs:
-        proj_biases = cap_df[(cap_df['Sequence']=='SRI_Original') & (cap_df['Y_Loc']==y) & (cap_df['Grid_Loc']==g)]['Biases_Crop'].apply(pd.Series).values.ravel()
-        hm_biases = cap_df[(cap_df['Sequence']=='FH512_noDither_gradSpoiled') & (cap_df['Y_Loc']==y) & (cap_df['Grid_Loc']==g)]['Biases_Crop'].apply(pd.Series).values.ravel()
+        proj_biases = cap_df[(cap_df['Sequence']=='SRI_Original') & (cap_df['Y_Loc']==y) & (cap_df['Grid_Loc']==g)]['Mean_Bias'].ravel()
+        hm_biases = cap_df[(cap_df['Sequence']=='FH512_noDither_gradSpoiled') & (cap_df['Y_Loc']==y) & (cap_df['Grid_Loc']==g)]['Mean_Bias'].ravel()
         proj_biases = proj_biases[~np.isnan(proj_biases)]
         hm_biases = hm_biases[~np.isnan(hm_biases)]
         cap_3P_mean_errors.append(np.mean(proj_biases))
         cap_HM_mean_errors.append(np.mean(hm_biases))
 
 
-# In[144]:
+# In[145]:
 
 
 np.mean(cap_3P_mean_errors)
 
 
-# In[145]:
+# In[146]:
 
 
 np.std(cap_3P_mean_errors)
 
 
-# In[146]:
+# In[147]:
 
 
 np.mean(cap_HM_mean_errors)
 
 
-# In[147]:
+# In[148]:
 
 
 np.std(cap_HM_mean_errors)
 
 
-# In[148]:
+# In[149]:
 
 
 w, p = stats.wilcoxon(x=cap_HM_mean_errors,y=cap_3P_mean_errors,alternative='less')
 
 
-# In[149]:
+# In[150]:
 
 
 p
 
 
-# In[150]:
+# In[151]:
 
 
 ax = sns.boxplot(data=[cap_3P_mean_errors,cap_HM_mean_errors],orient='v',showmeans=True)
@@ -1309,7 +1317,7 @@ plt.show()
 # 
 # `[ [GT_x_pos0, GT_z_pos0, bias_pos0, variance_pos0], [GT_x_pos1, GT_z_pos1, bias_pos1, variance_pos1], ... [GT_x_pos15, GT_z_pos15, bias_pos15, variance_pos2] ]`
 
-# In[151]:
+# In[152]:
 
 
 with h5py.File(h5out, 'r', libver='latest') as f:
